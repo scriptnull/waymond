@@ -1,2 +1,2 @@
 # waymond
-Autoscale Anything Anywhere All at once!
+Autoscale Anything Anywhere All at once! :eyes:
