@@ -1,0 +1,13 @@
+{
+  "requesters": [
+    {
+      "type": "buildkite",
+      "allow_queues": [
+        "*"
+      ],
+      "reject_queues": [
+        "dev-*"
+      ]
+    }
+  ]
+}
