@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/scriptnull/waymond/requester"
+	"github.com/scriptnull/waymond/schedule"
 )
 
 func main() {
@@ -34,6 +37,23 @@ func main() {
 
 		fmt.Printf("registered requester[%d]: (type: %s)\n", idx, requester.Type)
 	}
+
+	// start global schedulers
+	schedule.CronScheduler.Start()
+
+	// wait for signals to quit program
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	done := make(chan bool, 1)
+	go func() {
+		sig := <-sigs
+		fmt.Println("received signal", sig)
+		done <- true
+	}()
+	fmt.Println("started waymond successfully")
+	fmt.Println("press CTRL+C if you would like to quit")
+	<-done
+	fmt.Println("stopped waymond")
 }
 
 type Config struct {

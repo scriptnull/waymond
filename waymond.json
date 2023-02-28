@@ -2,12 +2,20 @@
   "requesters": [
     {
       "type": "buildkite",
-      "allow_queues": [
-        "*"
-      ],
-      "reject_queues": [
-        "dev-*"
-      ]
+      "schedule": {
+        "type": "cron",
+        "config": {
+          "expression": "*/2 * * * *"
+        }
+      },
+      "config": {
+        "allow_queues": [
+          "*"
+        ],
+        "reject_queues": [
+          "dev-*"
+        ]
+      }
     }
   ]
 }
