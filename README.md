@@ -7,10 +7,17 @@
 
 &nbsp;
 
+## Motivation
+
+waymond is
+- An open-source autoscaler.
+- Aims to provide autoscaling for wide variety of infrastructure. (from operating system processes to kubernetes clusters)
+- Modular and extensible.
+- Build with Go.
 
 ## Contribute
 
-**Software Preequisites**
+**Software pre-requisites**
 
 1. [Go](https://go.dev/) v1.19 or above
 1. [Just](https://github.com/casey/just)
