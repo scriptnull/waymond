@@ -23,35 +23,58 @@ func (b *Buildkite) Register() error {
 	return nil
 }
 
-func (b *Buildkite) AutoScaleRequest() {
+func (b *Buildkite) AutoScaleRequest() error {
 	fmt.Println("invoking buildkite AutoScaleRequest")
 	req, err := http.NewRequest("GET", "https://agent.buildkite.com/v3/metrics", nil)
 	if err != nil {
-		fmt.Println("debug new request error:", err)
+		return fmt.Errorf("debug new request error: %s", err)
 	}
 	req.Header.Add("User-Agent", "waymond-autoscaler")
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", b.token))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println("debug client do error:", err)
-		return
+		return fmt.Errorf("debug client do error: %s", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("status code is not okay: ", resp.StatusCode)
-		return
+		return fmt.Errorf("status code is not okay: %d", resp.StatusCode)
 	}
 
 	// by, _ := io.ReadAll(resp.Body)
 	// fmt.Println(string(by))
 
-	var metrics map[string]any
-	err = json.NewDecoder(resp.Body).Decode(&metrics)
-	if err != nil {
-		fmt.Println("unable to decode response body", err)
-		return
+	var agentMetrics struct {
+		Organization struct {
+			Slug string `json:"slug"`
+		} `json:"organization"`
+		Agents struct {
+			Queues map[string]struct {
+				Busy  int64 `json:"busy"`
+				Idle  int64 `json:"idle"`
+				Total int64 `json:"total"`
+			} `json:"queues"`
+		} `json:"agents"`
+		Jobs struct {
+			Queues map[string]struct {
+				Scheduled int64 `json:"scheduled"`
+				Running   int64 `json:"running"`
+				Waiting   int64 `json:"waiting"`
+			} `json:"queues"`
+		} `json:"jobs"`
 	}
 
-	fmt.Println("debug metrics response", metrics)
+	err = json.NewDecoder(resp.Body).Decode(&agentMetrics)
+	if err != nil {
+		return fmt.Errorf("unable to decode response body: %s", err)
+	}
+
+	fmt.Println("debug metrics response", agentMetrics)
+
+	for queueName, queue := range agentMetrics.Jobs.Queues {
+		if queue.Waiting > 0 {
+			fmt.Printf("need %d agents for %s queue \n", queue.Waiting, queueName)
+		}
+	}
+	return nil
 }

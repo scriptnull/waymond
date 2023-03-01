@@ -18,7 +18,7 @@ var ErrUnknownType = errors.New("unknown requester type")
 
 func (ins *Instance) Register() error {
 	type Requester interface {
-		AutoScaleRequest()
+		AutoScaleRequest() error
 	}
 
 	var requester Requester
@@ -39,5 +39,7 @@ func (ins *Instance) Register() error {
 		return ErrUnknownType
 	}
 
-	return ins.Schedule.Register(requester.AutoScaleRequest)
+	return ins.Schedule.Register(func() {
+		requester.AutoScaleRequest()
+	})
 }
