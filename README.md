@@ -11,7 +11,7 @@
 
 waymond is
 - An open-source autoscaler.
-- Aims to provide autoscaling for wide variety of infrastructure.
+- Aims to provide autoscaling for a wide variety of infrastructure.
 - Modular and extensible.
 - Built with Go.
 
@@ -19,8 +19,7 @@ There are a lot of autoscalers out there like [AWS EC2 Autoscaling](https://docs
 
 The original idea for waymond came up while trying to autoscale CI/CD workloads in self-hosted infrastructure. Example: Autoscale the number of CI agents running as systemd processes inside a big EC2 VM and when we run out of limits there, try to bring up new EC2 VMs that run one CI agent per machine for a given CI job queue. At the sametime, autoscale the agents running in a kubernetes cluster when jobs are arriving in a different CI job queue.
 
-waymond tries to support a variety of autoscaling targets from operating system processes to kubernetes clusters and everything in-between like traditional VMs. One of the main goals of the project is to make it very easy to autoscale mixed type of targets. Example: a single instance of waymond could autoscale multiple services that are suited to run on different environments.
-
+waymond tries to support a variety of autoscaling targets from operating system processes to kubernetes clusters and everything in-between like traditional VMs. One of the main goals of the project is to make it very easy to autoscale mixed type of targets. Truly anything and anywhere!
 
 ## Contribute
 
