@@ -1,8 +1,0 @@
-{
-  "bridges": [
-    {
-      "from": "global_cron",
-      "to": "local_redis_containers"
-    }
-  ]
-}

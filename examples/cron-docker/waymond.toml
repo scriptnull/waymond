@@ -1,0 +1,20 @@
+#
+# cron -> docker
+#
+# For every 1 minute, waymond will check if there are two redis docker containers running and run them if not
+
+[[trigger]]
+type = "cron"
+id = "global_cron"
+expression = "*/1 * * * *"
+
+[[scaler]]
+type = "docker"
+id = "local_redis_containers"
+image_name = "redis"
+image_tag = "latest"
+replica = 2
+
+[[connect]]
+from = "global_cron"
+to = "local_redis_containers"
