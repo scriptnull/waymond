@@ -10,21 +10,29 @@ import (
 	"github.com/knadh/koanf/parsers/toml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"github.com/scriptnull/waymond/requester"
 )
 
-var configPath *string
+var configPath string
 var k = koanf.New(".")
 
 func main() {
 	// set command line flags
-	flag.StringVar(configPath, "config", "", "file path to waymond config file (.toml)")
+	flag.StringVar(&configPath, "config", "", "file path to waymond config file (.toml)")
 	flag.Parse()
+	if configPath == "" {
+		configPath = "waymond.toml"
+	}
 
 	// read waymond config file
-	if err := k.Load(file.Provider(*configPath), toml.Parser()); err != nil {
+	if err := k.Load(file.Provider(configPath), toml.Parser()); err != nil {
 		fmt.Println("error loading config:", err)
 		os.Exit(1)
+	}
+
+	// var config Config
+	triggers := k.Slices("trigger")
+	for _, trigger := range triggers {
+		fmt.Printf("trigger: type = %s, id = %s \n", trigger.String("type"), trigger.String("id"))
 	}
 
 	// wait for signals to quit program
@@ -40,8 +48,4 @@ func main() {
 	fmt.Println("press CTRL+C if you would like to quit")
 	<-done
 	fmt.Println("stopped waymond")
-}
-
-type Config struct {
-	Requesters []requester.Instance `json:"requesters"`
 }
