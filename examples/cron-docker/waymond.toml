@@ -13,7 +13,7 @@ type = "docker"
 id = "local_redis_containers"
 image_name = "redis"
 image_tag = "latest"
-replica = 2
+count = 2
 
 [[connect]]
 from = "global_cron"
