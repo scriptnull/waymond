@@ -1,45 +1,31 @@
 package main
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/knadh/koanf/parsers/toml"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/requester"
-	"github.com/scriptnull/waymond/schedule"
 )
 
+var configPath *string
+var k = koanf.New(".")
+
 func main() {
-	// read waymond config
-	configFile, err := os.ReadFile("waymond.json")
-	if err != nil {
-		fmt.Println("unable to read waymond config file", err)
+	// set command line flags
+	flag.StringVar(configPath, "config", "", "file path to waymond config file (.toml)")
+	flag.Parse()
+
+	// read waymond config file
+	if err := k.Load(file.Provider(*configPath), toml.Parser()); err != nil {
+		fmt.Println("error loading config:", err)
 		os.Exit(1)
 	}
-
-	// parse config contents
-	var config Config
-	err = json.Unmarshal(configFile, &config)
-	if err != nil {
-		fmt.Println("unable to parse waymond config file", err)
-	}
-	fmt.Println("loaded waymond config successfully")
-
-	// register the auto-scaling requesters
-	for idx, requester := range config.Requesters {
-		err = requester.Register()
-		if err != nil {
-			fmt.Println("unable to register the requester:", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("registered requester[%d]: (type: %s)\n", idx, requester.Type)
-	}
-
-	// start global schedulers
-	schedule.CronScheduler.Start()
 
 	// wait for signals to quit program
 	sigs := make(chan os.Signal, 1)
