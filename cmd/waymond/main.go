@@ -76,11 +76,12 @@ func main() {
 
 	var registerErrs []error
 	for id, trigger := range triggers {
-		fmt.Printf("registering trigger: id:%s type:%s \n", id, trigger.Type())
+		fmt.Printf("starting to register trigger: id:%s type:%s \n", id, trigger.Type())
 		err := trigger.Register()
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}
+		fmt.Printf("registered trigger: id:%s type:%s \n", id, trigger.Type())
 	}
 	if len(registerErrs) > 0 {
 		fmt.Println("error while registering triggers:", registerErrs)
