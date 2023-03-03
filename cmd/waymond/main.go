@@ -10,6 +10,9 @@ import (
 	"github.com/knadh/koanf/parsers/toml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
+	"github.com/scriptnull/waymond/internal/scaler/docker"
+	"github.com/scriptnull/waymond/internal/trigger"
+	"github.com/scriptnull/waymond/internal/trigger/cron"
 )
 
 var configPath string
@@ -29,10 +32,46 @@ func main() {
 		os.Exit(1)
 	}
 
-	// var config Config
-	triggers := k.Slices("trigger")
-	for _, trigger := range triggers {
-		fmt.Printf("trigger: type = %s, id = %s \n", trigger.String("type"), trigger.String("id"))
+	// register all triggers provided by waymond out of the box
+	triggerConfigParsers := make(map[string]func(*koanf.Koanf) (trigger.Interface, error))
+	triggerConfigParsers[cron.Type] = cron.ParseConfig
+
+	// register all scalers provided by waymond out of the box
+	sysScalers := make(map[string]any)
+	sysScalers[docker.Type] = docker.Scaler{}
+
+	triggerConfigs := k.Slices("trigger")
+	triggers := make(map[string]trigger.Interface)
+	var errs []error
+	for _, triggerConfig := range triggerConfigs {
+		ttype := triggerConfig.String("type")
+		if ttype == "" {
+			errs = append(errs, fmt.Errorf("expected a non-empty 'type' field for trigger: %+v", triggerConfig))
+			continue
+		}
+
+		id := triggerConfig.String("id")
+		if id == "" {
+			errs = append(errs, fmt.Errorf("expected a non-empty 'id' field for trigger: %+v", triggerConfig))
+			continue
+		}
+
+		parseConfig, found := triggerConfigParsers[ttype]
+		if !found {
+			errs = append(errs, fmt.Errorf("unknown 'type' value in trigger: %s in %+v", ttype, triggerConfig))
+			continue
+		}
+
+		trigger, err := parseConfig(triggerConfig)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		triggers[id] = trigger
+	}
+	if len(errs) > 0 {
+		fmt.Println(errs)
+		os.Exit(1)
 	}
 
 	// wait for signals to quit program
