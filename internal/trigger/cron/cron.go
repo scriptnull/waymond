@@ -7,9 +7,17 @@ import (
 	"github.com/scriptnull/waymond/internal/trigger"
 )
 
-const Type string = "cron"
+const Type trigger.Type = "cron"
 
 type Trigger struct {
+}
+
+func (t *Trigger) Type() trigger.Type {
+	return Type
+}
+
+func (t *Trigger) Register() error {
+	return nil
 }
 
 func ParseConfig(k *koanf.Koanf) (trigger.Interface, error) {

@@ -1,3 +1,8 @@
 package trigger
 
-type Interface interface{}
+type Type string
+
+type Interface interface {
+	Type() Type
+	Register() error
+}

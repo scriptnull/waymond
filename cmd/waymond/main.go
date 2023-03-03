@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// register all triggers provided by waymond out of the box
-	triggerConfigParsers := make(map[string]func(*koanf.Koanf) (trigger.Interface, error))
+	triggerConfigParsers := make(map[trigger.Type]func(*koanf.Koanf) (trigger.Interface, error))
 	triggerConfigParsers[cron.Type] = cron.ParseConfig
 
 	// register all scalers provided by waymond out of the box
@@ -56,7 +56,7 @@ func main() {
 			continue
 		}
 
-		parseConfig, found := triggerConfigParsers[ttype]
+		parseConfig, found := triggerConfigParsers[trigger.Type(ttype)]
 		if !found {
 			errs = append(errs, fmt.Errorf("unknown 'type' value in trigger: %s in %+v", ttype, triggerConfig))
 			continue
@@ -71,6 +71,19 @@ func main() {
 	}
 	if len(errs) > 0 {
 		fmt.Println(errs)
+		os.Exit(1)
+	}
+
+	var registerErrs []error
+	for id, trigger := range triggers {
+		fmt.Printf("registering trigger: id:%s type:%s \n", id, trigger.Type())
+		err := trigger.Register()
+		if err != nil {
+			registerErrs = append(registerErrs, err)
+		}
+	}
+	if len(registerErrs) > 0 {
+		fmt.Println("error while registering triggers:", registerErrs)
 		os.Exit(1)
 	}
 
