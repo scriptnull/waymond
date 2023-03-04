@@ -42,7 +42,7 @@ Connectors are the components which connect two objects to facilitate the flow o
 Connectors can connect a trigger to a trigger (and form a chain of triggers) that ultimately is connected to a scaler. Connectors are also a good place to do data transformation of data from a trigger to a format of data that a scaler can understand.
 
 ### Event Bus
-All the components `triggers`, `scalers`, and `connectors` are internally connected via a simple event bus (don't be scared it is just a Go channel and some helper functions :smile: ). This event-based architecture will help any of the above mentioned components to capture and act on events in a seamless way.
+All the components `triggers`, `scalers`, and `connectors` are internally connected via a simple event bus (don't be scared it is just a Go channel and some helper functions :smile:). This event-based architecture will help any of the above mentioned components to capture and act on events in a seamless way.
 
 ## Contribute
 
