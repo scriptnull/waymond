@@ -16,5 +16,7 @@ image_tag = "latest"
 count = 2
 
 [[connect]]
-from = "global_cron"
-to = "local_redis_containers"
+type = "direct"
+id = "run_redis_via_cron"
+from = "trigger.global_cron"
+to = "scaler.local_redis_containers"

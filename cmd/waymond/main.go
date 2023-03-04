@@ -10,6 +10,8 @@ import (
 	"github.com/knadh/koanf/parsers/toml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
+	"github.com/scriptnull/waymond/internal/connector"
+	"github.com/scriptnull/waymond/internal/connector/direct"
 	"github.com/scriptnull/waymond/internal/scaler"
 	"github.com/scriptnull/waymond/internal/scaler/docker"
 	"github.com/scriptnull/waymond/internal/trigger"
@@ -110,6 +112,44 @@ func main() {
 		os.Exit(1)
 	}
 
+	// track available connector configuration parsers available out of the box in waymond
+	connectorConfigParsers := make(map[connector.Type]func(*koanf.Koanf) (connector.Interface, error))
+	connectorConfigParsers[direct.Type] = direct.ParseConfig
+
+	// extract connector from connector configurations
+	connectorConfigs := k.Slices("connect")
+	connectors := make(map[string]connector.Interface)
+	for _, connectorConfig := range connectorConfigs {
+		ttype := connectorConfig.String("type")
+		if ttype == "" {
+			errs = append(errs, fmt.Errorf("expected a non-empty 'type' field for connector: %+v", connectorConfig))
+			continue
+		}
+
+		id := connectorConfig.String("id")
+		if id == "" {
+			errs = append(errs, fmt.Errorf("expected a non-empty 'id' field for connector: %+v", connectorConfig))
+			continue
+		}
+
+		parseConfig, found := connectorConfigParsers[connector.Type(ttype)]
+		if !found {
+			errs = append(errs, fmt.Errorf("unknown 'type' value in connector: %s in %+v", ttype, connectorConfig))
+			continue
+		}
+
+		connector, err := parseConfig(connectorConfig)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		connectors[id] = connector
+	}
+	if len(errs) > 0 {
+		fmt.Println(errs)
+		os.Exit(1)
+	}
+
 	var registerErrs []error
 
 	// register all the triggers in the config
@@ -137,6 +177,20 @@ func main() {
 	}
 	if len(registerErrs) > 0 {
 		fmt.Println("error while registering scalers:", registerErrs)
+		os.Exit(1)
+	}
+
+	// register all the connectors in the config
+	for id, connector := range connectors {
+		fmt.Printf("starting to register connector: id:%s type:%s \n", id, connector.Type())
+		err := connector.Register()
+		if err != nil {
+			registerErrs = append(registerErrs, err)
+		}
+		fmt.Printf("registered connector: id:%s type:%s \n", id, connector.Type())
+	}
+	if len(registerErrs) > 0 {
+		fmt.Println("error while registering connectors:", registerErrs)
 		os.Exit(1)
 	}
 
