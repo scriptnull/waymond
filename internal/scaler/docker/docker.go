@@ -1,15 +1,19 @@
 package docker
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	"github.com/knadh/koanf/v2"
+	"github.com/scriptnull/waymond/internal/event"
 	"github.com/scriptnull/waymond/internal/scaler"
 )
 
 const Type scaler.Type = "docker"
 
 type Scaler struct {
+	id        string
 	imageName string
 	imageTag  string
 	count     int
@@ -19,7 +23,11 @@ func (s *Scaler) Type() scaler.Type {
 	return Type
 }
 
-func (s *Scaler) Register() error {
+func (s *Scaler) Register(ctx context.Context) error {
+	eventBus := ctx.Value("eventBus").(event.Bus)
+	eventBus.Subscribe(fmt.Sprintf("scaler.%s", s.id), func() {
+		fmt.Println("event received inside docker scaler. this will perform an autoscale")
+	})
 	return nil
 }
 
@@ -37,6 +45,7 @@ func ParseConfig(k *koanf.Koanf) (scaler.Interface, error) {
 	count := k.Int("count")
 
 	return &Scaler{
+		k.String("id"),
 		imageName,
 		imageTag,
 		count,

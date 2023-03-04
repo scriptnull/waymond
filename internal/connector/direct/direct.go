@@ -1,10 +1,12 @@
 package direct
 
 import (
+	"context"
 	"errors"
 
 	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/internal/connector"
+	"github.com/scriptnull/waymond/internal/event"
 )
 
 var Type = connector.Type("direct")
@@ -18,7 +20,13 @@ func (c *Connector) Type() connector.Type {
 	return Type
 }
 
-func (c *Connector) Register() error {
+func (c *Connector) Register(ctx context.Context) error {
+	eventBus := ctx.Value("eventBus").(event.Bus)
+
+	eventBus.Subscribe(c.from, func() {
+		eventBus.Publish(c.to, []byte(""))
+	})
+
 	return nil
 }
 

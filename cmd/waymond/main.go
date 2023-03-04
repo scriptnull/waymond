@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/internal/connector"
 	"github.com/scriptnull/waymond/internal/connector/direct"
+	"github.com/scriptnull/waymond/internal/event"
 	"github.com/scriptnull/waymond/internal/scaler"
 	"github.com/scriptnull/waymond/internal/scaler/docker"
 	"github.com/scriptnull/waymond/internal/trigger"
@@ -150,12 +152,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
+	eventBus, err := event.Init()
+	if err != nil {
+		fmt.Println("error initializing the event bus", err)
+		os.Exit(1)
+	}
+	ctx = context.WithValue(ctx, "eventBus", eventBus)
+
 	var registerErrs []error
 
 	// register all the triggers in the config
 	for id, trigger := range triggers {
 		fmt.Printf("starting to register trigger: id:%s type:%s \n", id, trigger.Type())
-		err := trigger.Register()
+		err := trigger.Register(ctx)
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}
@@ -169,7 +180,7 @@ func main() {
 	// register all the scalers in the config
 	for id, scaler := range scalers {
 		fmt.Printf("starting to register scaler: id:%s type:%s \n", id, scaler.Type())
-		err := scaler.Register()
+		err := scaler.Register(ctx)
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}
@@ -183,7 +194,7 @@ func main() {
 	// register all the connectors in the config
 	for id, connector := range connectors {
 		fmt.Printf("starting to register connector: id:%s type:%s \n", id, connector.Type())
-		err := connector.Register()
+		err := connector.Register(ctx)
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}

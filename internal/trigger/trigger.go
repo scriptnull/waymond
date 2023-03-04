@@ -1,5 +1,7 @@
 package trigger
 
+import "context"
+
 type Type string
 
 type Interface interface {
@@ -8,5 +10,5 @@ type Interface interface {
 	// Register is used to register the trigger with waymond core
 	// It is executed exactly once for a given trigger
 	// i.e. when waymond boots up
-	Register() error
+	Register(ctx context.Context) error
 }
