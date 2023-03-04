@@ -25,6 +25,25 @@ waymond tries to support a variety of autoscaling targets from operating system 
 
 ![image](https://user-images.githubusercontent.com/4211715/222920889-9d19dd0c-5d32-4ef2-918b-b5ac97b5845c.png)
 
+## Concepts
+
+### Triggers
+
+Triggers are the components which could trigger an event, which could ultimately yield to autoscaling. The decision of when and how to auto-scale will flow from here.
+
+### Scalers
+
+Scalers are the components which perform autoscaling operation. They access the target APIs (like docker or AWS API) to achieve a desired state in those systems.
+
+### Connectors
+
+Connectors are the components which connect two objects to facilitate the flow of events between them. Example: A connector could connect a cron trigger to docker scaler. This will ensure that the desired number of docker containers are running in a machine periodically.
+
+Connectors can connect a trigger to a trigger (and form a chain of triggers) that ultimately is connected to a scaler. Connectors are also a good place to do data transformation of data from a trigger to a format of data that a scaler can understand.
+
+### Event Bus
+All the components `triggers`, `scalers`, and `connectors` are internally connected via a simple event bus (don't be scared it is just a Go channel and some helper functions :smile: ). This event-based architecture will help any of the above mentioned components to capture and act on events in a seamless way.
+
 ## Contribute
 
 **Software pre-requisites**
