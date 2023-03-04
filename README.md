@@ -21,6 +21,10 @@ The original idea for waymond came up while trying to autoscale CI/CD workloads 
 
 waymond tries to support a variety of autoscaling targets from operating system processes to kubernetes clusters and everything in-between like traditional VMs. One of the main goals of the project is to make it very easy to autoscale mixed type of targets. Truly anything and anywhere!
 
+## Architecture
+
+![image](https://user-images.githubusercontent.com/4211715/222920889-9d19dd0c-5d32-4ef2-918b-b5ac97b5845c.png)
+
 ## Contribute
 
 **Software pre-requisites**
