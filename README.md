@@ -23,7 +23,7 @@ waymond tries to support a variety of autoscaling targets from operating system 
 
 ## Architecture
 
-![image](https://user-images.githubusercontent.com/4211715/222920889-9d19dd0c-5d32-4ef2-918b-b5ac97b5845c.png)
+![architecture](https://user-images.githubusercontent.com/4211715/222922530-fda823c7-1a72-4156-99ac-3d249e4e8e47.png)
 
 ## Concepts
 
