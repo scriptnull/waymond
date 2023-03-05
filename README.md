@@ -47,6 +47,17 @@ Connectors can connect a trigger to a trigger (and form a chain of triggers) tha
 ### Event Bus
 All the components `triggers`, `scalers`, and `connectors` are internally connected via a simple event bus (don't be scared it is just a Go channel and some helper functions :smile:). This event-based architecture will help any of the above mentioned components to capture and act on events in a seamless way.
 
+## Install
+
+Download the binary for your OS and architecture from the [latest release](https://github.com/scriptnull/waymond/releases). Extract the compressed package and move it an executable PATH.
+
+```sh
+# example: for linux amd64
+wget https://github.com/scriptnull/waymond/releases/latest/download/waymond_Linux_x86_64.tar.gz
+tar -xf waymond_Linux_x86_64.tar.gz
+mv waymond /usr/bin/waymond
+```
+
 ## Configuration
 
 waymond accepts a toml configuration file when it boots up to configure all its components.
