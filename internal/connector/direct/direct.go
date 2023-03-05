@@ -21,10 +21,8 @@ func (c *Connector) Type() connector.Type {
 }
 
 func (c *Connector) Register(ctx context.Context) error {
-	eventBus := ctx.Value("eventBus").(event.Bus)
-
-	eventBus.Subscribe(c.from, func() {
-		eventBus.Publish(c.to, []byte(""))
+	event.B.Subscribe(c.from, func() {
+		event.B.Publish(c.to, []byte(""))
 	})
 
 	return nil

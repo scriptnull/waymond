@@ -25,8 +25,7 @@ func (t *Trigger) Type() trigger.Type {
 func (t *Trigger) Register(ctx context.Context) error {
 	c := cron.New()
 	_, err := c.AddFunc(t.cronExpr, func() {
-		eventBus := ctx.Value("eventBus").(event.Bus)
-		eventBus.Publish(fmt.Sprintf("trigger.%s", t.id), []byte{})
+		event.B.Publish(fmt.Sprintf("trigger.%s", t.id), []byte{})
 	})
 	if err != nil {
 		return err

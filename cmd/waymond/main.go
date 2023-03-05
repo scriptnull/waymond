@@ -154,12 +154,11 @@ func main() {
 
 	ctx := context.Background()
 
-	eventBus, err := event.Init()
+	err := event.Init()
 	if err != nil {
 		fmt.Println("error initializing the event bus", err)
 		os.Exit(1)
 	}
-	ctx = context.WithValue(ctx, "eventBus", eventBus)
 
 	var registerErrs []error
 

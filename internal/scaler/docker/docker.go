@@ -34,8 +34,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	eventBus := ctx.Value("eventBus").(event.Bus)
-	eventBus.Subscribe(fmt.Sprintf("scaler.%s", s.id), func() {
+	event.B.Subscribe(fmt.Sprintf("scaler.%s", s.id), func() {
 		fmt.Printf("scaler.%s.start \n", s.id)
 
 		imageFullName := fmt.Sprintf("%s:%s", s.imageName, s.imageTag)

@@ -5,21 +5,24 @@ type Event struct {
 	Value []byte
 }
 
+var B *Bus
+
 type Bus struct {
-	C           chan Event
+	c           chan Event
 	subscribers map[string][]func()
 }
 
-func Init() (Bus, error) {
-	eventBus := Bus{}
-	eventBus.C = make(chan Event)
-	eventBus.subscribers = make(map[string][]func())
-	go eventBus.listen()
-	return eventBus, nil
+func Init() error {
+	B = &Bus{
+		c:           make(chan Event),
+		subscribers: make(map[string][]func()),
+	}
+	go B.listen()
+	return nil
 }
 
 func (eb *Bus) listen() {
-	for event := range eb.C {
+	for event := range eb.c {
 		for _, emit := range eb.subscribers[event.Name] {
 			go emit()
 		}
@@ -31,5 +34,5 @@ func (eb *Bus) Subscribe(eventName string, callback func()) {
 }
 
 func (eb *Bus) Publish(eventName string, data []byte) {
-	eb.C <- Event{eventName, data}
+	eb.c <- Event{eventName, data}
 }
