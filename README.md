@@ -7,11 +7,14 @@
 
 &nbsp;
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/scriptnull/waymond)](https://goreportcard.com/report/github.com/scriptnull/waymond) [![lint](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml/badge.svg?branch=main)](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml) ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/scriptnull/waymond) ![GitHub](https://img.shields.io/github/license/scriptnull/waymond)
+
 waymond is
 - An open-source autoscaler.
 - Aiming to provide autoscaling for a wide variety of infrastructure.
 - Modular and extensible.
 - Built with Go.
+
 
 ## Motivation
 
