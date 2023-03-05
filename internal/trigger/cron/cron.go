@@ -15,9 +15,10 @@ import (
 const Type trigger.Type = "cron"
 
 type Trigger struct {
-	log      log.Logger
-	id       string
-	cronExpr string
+	log          log.Logger
+	id           string
+	namespacedID string
+	cronExpr     string
 }
 
 func (t *Trigger) Type() trigger.Type {
@@ -27,7 +28,8 @@ func (t *Trigger) Type() trigger.Type {
 func (t *Trigger) Register(ctx context.Context) error {
 	c := cron.New()
 	_, err := c.AddFunc(t.cronExpr, func() {
-		event.B.Publish(fmt.Sprintf("trigger.%s", t.id), []byte{})
+		t.log.Verbose("publishing event")
+		event.B.Publish(t.namespacedID, []byte{})
 	})
 	if err != nil {
 		return err
@@ -48,10 +50,11 @@ func ParseConfig(k *koanf.Koanf) (trigger.Interface, error) {
 	}
 
 	t := &Trigger{
-		id:       id,
-		cronExpr: expression,
-		log:      log.New(fmt.Sprintf("waymond.trigger.%s", id)),
+		id:           id,
+		namespacedID: fmt.Sprintf("trigger.%s", id),
+		cronExpr:     expression,
 	}
+	t.log = log.New(t.namespacedID)
 
 	return t, nil
 }

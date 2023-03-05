@@ -11,16 +11,19 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/internal/event"
+	"github.com/scriptnull/waymond/internal/log"
 	"github.com/scriptnull/waymond/internal/scaler"
 )
 
 const Type scaler.Type = "docker"
 
 type Scaler struct {
-	id        string
-	imageName string
-	imageTag  string
-	count     int
+	id           string
+	namespacedID string
+	imageName    string
+	imageTag     string
+	count        int
+	log          log.Logger
 }
 
 func (s *Scaler) Type() scaler.Type {
@@ -34,8 +37,8 @@ func (s *Scaler) Register(ctx context.Context) error {
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	event.B.Subscribe(fmt.Sprintf("scaler.%s", s.id), func() {
-		fmt.Printf("scaler.%s.start \n", s.id)
+	event.B.Subscribe(s.namespacedID, func() {
+		s.log.Verbose("start")
 
 		imageFullName := fmt.Sprintf("%s:%s", s.imageName, s.imageTag)
 
@@ -52,68 +55,76 @@ func (s *Scaler) Register(ctx context.Context) error {
 			),
 		})
 		if err != nil {
-			fmt.Println("error listing containers", err)
+			s.log.Errorf("error listing containers", err)
 			return
 		}
 
 		currentCount := len(containers)
 		if currentCount < s.count {
-			fmt.Printf("scaler.%s :: current count: %d, desired count: %d \n", s.id, currentCount, s.count)
+			s.log.Debugf("current count: %d, desired count: %d \n", currentCount, s.count)
 			remainingCount := s.count - currentCount
-			fmt.Printf("scaler.%s :: scaling up by creating %d container(s) \n", s.id, remainingCount)
+			s.log.Debugf("scaling up by creating %d container(s) \n", remainingCount)
 
 			for i := 0; i < remainingCount; i++ {
 				c, err := cli.ContainerCreate(ctx, &container.Config{Image: imageFullName}, nil, nil, nil, "")
 				if err != nil {
-					fmt.Printf("scaler.%s.error: %s \n", s.id, err)
+					s.log.Errorf("error: %s \n", err)
 					return
 				}
-				fmt.Printf("scaler.%s.container.created: %s \n", s.id, c.ID)
+				s.log.Debugf("container.created: %s \n", c.ID)
 
 				err = cli.ContainerStart(ctx, c.ID, types.ContainerStartOptions{})
 				if err != nil {
-					fmt.Printf("scaler.%s.error: %s \n", s.id, err)
+					s.log.Errorf("error: %s \n", err)
 					return
 				}
-				fmt.Printf("scaler.%s.container.started: %s \n", s.id, c.ID)
+				s.log.Debugf("container.started: %s \n", c.ID)
 			}
 		} else if currentCount > s.count {
-			fmt.Printf("scaler.%s :: current count: %d, desired count: %d \n", s.id, currentCount, s.count)
+			s.log.Debugf("current count: %d, desired count: %d \n", currentCount, s.count)
 			deletionCount := currentCount - s.count
-			fmt.Printf("scaler.%s :: scaling down by removing %d container(s) \n", s.id, deletionCount)
+			s.log.Debugf("scaling down by removing %d container(s) \n", deletionCount)
 
 			for i := 0; i < deletionCount; i++ {
 				err = cli.ContainerRemove(ctx, containers[i].ID, types.ContainerRemoveOptions{Force: true})
 				if err != nil {
-					fmt.Printf("scaler.%s.error: %s \n", s.id, err)
+					s.log.Errorf("error: %s \n", err)
 					return
 				}
-				fmt.Printf("scaler.%s.container.removed: %s \n", s.id, containers[i].ID)
+				s.log.Debugf("container.removed: %s \n", containers[i].ID)
 			}
 		}
 
-		fmt.Printf("scaler.%s.done \n", s.id)
+		s.log.Verbose("end")
 	})
 	return nil
 }
 
 func ParseConfig(k *koanf.Koanf) (scaler.Interface, error) {
+	id := k.String("id")
+	if id == "" {
+		return nil, errors.New("expected non-empty value for 'id' in docker scaler")
+	}
+
 	imageName := k.String("image_name")
 	if imageName == "" {
-		return nil, errors.New("expected non-empty value for 'image_name' in cron trigger")
+		return nil, errors.New("expected non-empty value for 'image_name' in docker scaler")
 	}
 
 	imageTag := k.String("image_tag")
 	if imageTag == "" {
-		return nil, errors.New("expected non-empty value for 'image_tag' in cron trigger")
+		return nil, errors.New("expected non-empty value for 'image_tag' in docker scaler")
 	}
 
 	count := k.Int("count")
 
-	return &Scaler{
-		k.String("id"),
-		imageName,
-		imageTag,
-		count,
-	}, nil
+	s := &Scaler{
+		id:           id,
+		namespacedID: fmt.Sprintf("scaler.%s", id),
+		imageName:    imageName,
+		imageTag:     imageTag,
+		count:        count,
+	}
+	s.log = log.New(s.namespacedID)
+	return s, nil
 }

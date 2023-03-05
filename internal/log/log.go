@@ -20,7 +20,7 @@ func (l *Logger) logf(format string, args ...any) {
 	var logdata = []string{
 		l.prefix, "::", format,
 	}
-	fmt.Printf(strings.Join(logdata, " "), args)
+	fmt.Printf(strings.Join(logdata, " "), args...)
 }
 
 func (l *Logger) log(args ...any) {
