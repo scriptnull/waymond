@@ -8,12 +8,14 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/robfig/cron/v3"
 	"github.com/scriptnull/waymond/internal/event"
+	"github.com/scriptnull/waymond/internal/log"
 	"github.com/scriptnull/waymond/internal/trigger"
 )
 
 const Type trigger.Type = "cron"
 
 type Trigger struct {
+	log      log.Logger
 	id       string
 	cronExpr string
 }
@@ -35,13 +37,21 @@ func (t *Trigger) Register(ctx context.Context) error {
 }
 
 func ParseConfig(k *koanf.Koanf) (trigger.Interface, error) {
+	id := k.String("id")
+	if id == "" {
+		return nil, errors.New("expected non-empty value for 'id' in cron trigger")
+	}
+
 	expression := k.String("expression")
 	if expression == "" {
 		return nil, errors.New("expected non-empty value for 'expression' in cron trigger")
 	}
 
-	return &Trigger{
-		id:       k.String("id"),
+	t := &Trigger{
+		id:       id,
 		cronExpr: expression,
-	}, nil
+		log:      log.New(fmt.Sprintf("waymond.trigger.%s", id)),
+	}
+
+	return t, nil
 }
