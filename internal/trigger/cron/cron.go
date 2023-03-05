@@ -24,17 +24,14 @@ func (t *Trigger) Type() trigger.Type {
 
 func (t *Trigger) Register(ctx context.Context) error {
 	c := cron.New()
-	c.AddFunc(t.cronExpr, func() {
+	_, err := c.AddFunc(t.cronExpr, func() {
 		eventBus := ctx.Value("eventBus").(event.Bus)
 		eventBus.Publish(fmt.Sprintf("trigger.%s", t.id), []byte{})
-		t.Do()
 	})
+	if err != nil {
+		return err
+	}
 	c.Start()
-	return nil
-}
-
-func (t *Trigger) Do() error {
-	fmt.Println("Cron trigger Do func called")
 	return nil
 }
 
