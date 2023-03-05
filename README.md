@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/4211715/222185043-e82165e5-c755-4c4d-a10c-a28fad5503e7.png" height="128px">
+  <img src="https://user-images.githubusercontent.com/4211715/222973222-134cc720-3d44-484f-b39c-e2aaeb070bda.svg" height="128px">
   <br><br>
   <i>Autoscale Anything Anywhere All at once! :eyes:</i>
   <br>
