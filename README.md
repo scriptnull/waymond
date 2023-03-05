@@ -105,7 +105,9 @@ to = "scaler.local_redis_containers"
 | cron | Available | Trigger events based on [cron expressions](https://en.wikipedia.org/wiki/Cron) |
 | http_endpoint | Looking for contribution | Starts a HTTP server in waymond and triggers event for every HTTP request |
 | http_client | Looking for contribution | Creates a HTTP client in waymond and triggers event based on the HTTP response |
-| buildkite | Planned | Trigger event based on the CI job queue length in Buildkite |
+| buildkite | [Planned](https://github.com/scriptnull/waymond/milestone/1) | Trigger event based on the CI job queue length in Buildkite |
+
+Propose a new trigger [here](https://github.com/scriptnull/waymond/issues/new).
 
 ### Scaler
 
@@ -115,14 +117,18 @@ to = "scaler.local_redis_containers"
 | docker_compose | Looking for contribution | Autoscales containers in a docker compose setup |
 | aws_ec2 | Looking for contribution | Autoscales AWS EC2 machines |
 | aws_ec2_fleet | Looking for contribution | Autoscales AWS EC2 machines via [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html) |
-| aws_ec2_asg | Planned | Autoscales AWS EC2 machines via Autoscaling groups |
+| aws_ec2_asg | [Planned](https://github.com/scriptnull/waymond/milestone/1) | Autoscales AWS EC2 machines via Autoscaling groups |
+
+Propose a new scaler [here](https://github.com/scriptnull/waymond/issues/new).
 
 ### Connector
 
 | type | status | description |
 |------|--------|-------------|
 | direct | Available | Directly pass events between Trigger-Scaler or Trigger-Trigger |
-| regex | Planned | Like `direct`, but uses regular expressions to transform data sent between the components |
+| regex | [Planned](https://github.com/scriptnull/waymond/milestone/1) | Like `direct`, but uses regular expressions to transform data sent between the components |
+
+Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new).
 
 ## Contribute
 
