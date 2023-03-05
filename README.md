@@ -58,6 +58,16 @@ tar -xf waymond_Linux_x86_64.tar.gz
 mv waymond /usr/bin/waymond
 ```
 
+## Command
+The only way to run waymond right now is
+
+```sh
+waymond -config waymond.toml
+```
+
+But, we would love to add more commands and improve the CLI experience. So, please take a look [here](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%2Fcli) if you would like to contribute.
+
+
 ## Configuration
 
 waymond accepts a toml configuration file when it boots up to configure all its components.
