@@ -14,6 +14,7 @@ import (
 	"github.com/scriptnull/waymond/internal/connector"
 	"github.com/scriptnull/waymond/internal/connector/direct"
 	"github.com/scriptnull/waymond/internal/event"
+	"github.com/scriptnull/waymond/internal/log"
 	"github.com/scriptnull/waymond/internal/scaler"
 	"github.com/scriptnull/waymond/internal/scaler/docker"
 	"github.com/scriptnull/waymond/internal/trigger"
@@ -22,6 +23,7 @@ import (
 
 var configPath string
 var k = koanf.New(".")
+var corelog = log.New("waymond.core")
 
 func main() {
 	// set command line flags
@@ -33,7 +35,7 @@ func main() {
 
 	// read waymond config file
 	if err := k.Load(file.Provider(configPath), toml.Parser()); err != nil {
-		fmt.Println("error loading config:", err)
+		corelog.Error("error loading config:", err)
 		os.Exit(1)
 	}
 
@@ -72,7 +74,7 @@ func main() {
 		triggers[id] = trigger
 	}
 	if len(errs) > 0 {
-		fmt.Println(errs)
+		corelog.Error(errs)
 		os.Exit(1)
 	}
 
@@ -148,7 +150,7 @@ func main() {
 		connectors[id] = connector
 	}
 	if len(errs) > 0 {
-		fmt.Println(errs)
+		corelog.Error(errs)
 		os.Exit(1)
 	}
 
@@ -156,7 +158,7 @@ func main() {
 
 	err := event.Init()
 	if err != nil {
-		fmt.Println("error initializing the event bus", err)
+		corelog.Error("error initializing the event bus", err)
 		os.Exit(1)
 	}
 
@@ -172,7 +174,7 @@ func main() {
 		fmt.Printf("registered trigger: id:%s type:%s \n", id, trigger.Type())
 	}
 	if len(registerErrs) > 0 {
-		fmt.Println("error while registering triggers:", registerErrs)
+		corelog.Error("error while registering triggers:", registerErrs)
 		os.Exit(1)
 	}
 
@@ -186,7 +188,7 @@ func main() {
 		fmt.Printf("registered scaler: id:%s type:%s \n", id, scaler.Type())
 	}
 	if len(registerErrs) > 0 {
-		fmt.Println("error while registering scalers:", registerErrs)
+		corelog.Error("error while registering scalers:", registerErrs)
 		os.Exit(1)
 	}
 
@@ -200,7 +202,7 @@ func main() {
 		fmt.Printf("registered connector: id:%s type:%s \n", id, connector.Type())
 	}
 	if len(registerErrs) > 0 {
-		fmt.Println("error while registering connectors:", registerErrs)
+		corelog.Error("error while registering connectors:", registerErrs)
 		os.Exit(1)
 	}
 
@@ -210,11 +212,11 @@ func main() {
 	done := make(chan bool, 1)
 	go func() {
 		sig := <-sigs
-		fmt.Println("received signal", sig)
+		corelog.Verbose("received signal", sig)
 		done <- true
 	}()
-	fmt.Println("started waymond successfully")
-	fmt.Println("press CTRL+C if you would like to quit")
+	corelog.Verbose("started waymond successfully")
+	corelog.Verbose("press CTRL+C if you would like to quit")
 	<-done
-	fmt.Println("stopped waymond")
+	corelog.Verbose("stopped waymond")
 }
