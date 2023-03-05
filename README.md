@@ -65,7 +65,7 @@ The only way to run waymond right now is
 waymond -config waymond.toml
 ```
 
-But, we would love to add more commands and improve the CLI experience. So, please take a look [here](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%2Fcli) if you would like to contribute.
+But the project is looking to improve the CLI experience. So, please take a look [here](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%2Fcli) if you would like to contribute.
 
 
 ## Configuration
