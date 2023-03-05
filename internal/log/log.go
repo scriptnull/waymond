@@ -1,7 +1,10 @@
 // log package is trying to make all logs from waymond to be logged via a single interface
 package log
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Logger struct {
 	prefix string
@@ -14,8 +17,10 @@ func New(prefix string) Logger {
 }
 
 func (l *Logger) logf(format string, args ...any) {
-	logline := fmt.Sprintf(format, args...)
-	fmt.Printf(l.prefix, "::", logline)
+	var logdata = []string{
+		l.prefix, "::", format,
+	}
+	fmt.Printf(strings.Join(logdata, " "), args)
 }
 
 func (l *Logger) log(args ...any) {

@@ -166,12 +166,12 @@ func main() {
 
 	// register all the triggers in the config
 	for id, trigger := range triggers {
-		fmt.Printf("starting to register trigger: id:%s type:%s \n", id, trigger.Type())
+		corelog.Verbosef("starting to register trigger: id:%s type:%s \n", id, trigger.Type())
 		err := trigger.Register(ctx)
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}
-		fmt.Printf("registered trigger: id:%s type:%s \n", id, trigger.Type())
+		corelog.Verbosef("registered trigger: id:%s type:%s \n", id, trigger.Type())
 	}
 	if len(registerErrs) > 0 {
 		corelog.Error("error while registering triggers:", registerErrs)
@@ -180,12 +180,12 @@ func main() {
 
 	// register all the scalers in the config
 	for id, scaler := range scalers {
-		fmt.Printf("starting to register scaler: id:%s type:%s \n", id, scaler.Type())
+		corelog.Verbosef("starting to register scaler: id:%s type:%s \n", id, scaler.Type())
 		err := scaler.Register(ctx)
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}
-		fmt.Printf("registered scaler: id:%s type:%s \n", id, scaler.Type())
+		corelog.Verbosef("registered scaler: id:%s type:%s \n", id, scaler.Type())
 	}
 	if len(registerErrs) > 0 {
 		corelog.Error("error while registering scalers:", registerErrs)
@@ -194,12 +194,12 @@ func main() {
 
 	// register all the connectors in the config
 	for id, connector := range connectors {
-		fmt.Printf("starting to register connector: id:%s type:%s \n", id, connector.Type())
+		corelog.Verbosef("starting to register connector: id:%s type:%s \n", id, connector.Type())
 		err := connector.Register(ctx)
 		if err != nil {
 			registerErrs = append(registerErrs, err)
 		}
-		fmt.Printf("registered connector: id:%s type:%s \n", id, connector.Type())
+		corelog.Verbosef("registered connector: id:%s type:%s \n", id, connector.Type())
 	}
 	if len(registerErrs) > 0 {
 		corelog.Error("error while registering connectors:", registerErrs)
