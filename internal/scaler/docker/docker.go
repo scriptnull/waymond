@@ -59,8 +59,9 @@ func (s *Scaler) Register(ctx context.Context) error {
 
 		currentCount := len(containers)
 		if currentCount < s.count {
-			fmt.Printf("scaler.%s current count: %d, desired count: %d \n", s.id, currentCount, s.count)
+			fmt.Printf("scaler.%s :: current count: %d, desired count: %d \n", s.id, currentCount, s.count)
 			remainingCount := s.count - currentCount
+			fmt.Printf("scaler.%s :: scaling up by creating %d container(s) \n", s.id, remainingCount)
 
 			for i := 0; i < remainingCount; i++ {
 				c, err := cli.ContainerCreate(ctx, &container.Config{Image: imageFullName}, nil, nil, nil, "")
@@ -76,6 +77,19 @@ func (s *Scaler) Register(ctx context.Context) error {
 					return
 				}
 				fmt.Printf("scaler.%s.container.started: %s \n", s.id, c.ID)
+			}
+		} else if currentCount > s.count {
+			fmt.Printf("scaler.%s :: current count: %d, desired count: %d \n", s.id, currentCount, s.count)
+			deletionCount := currentCount - s.count
+			fmt.Printf("scaler.%s :: scaling down by removing %d container(s) \n", s.id, deletionCount)
+
+			for i := 0; i < deletionCount; i++ {
+				err = cli.ContainerRemove(ctx, containers[i].ID, types.ContainerRemoveOptions{Force: true})
+				if err != nil {
+					fmt.Printf("scaler.%s.error: %s \n", s.id, err)
+					return
+				}
+				fmt.Printf("scaler.%s.container.removed: %s \n", s.id, containers[i].ID)
 			}
 		}
 
