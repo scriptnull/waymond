@@ -7,7 +7,7 @@
 
 &nbsp;
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/scriptnull/waymond)](https://goreportcard.com/report/github.com/scriptnull/waymond) [![lint](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml/badge.svg?branch=main)](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml) ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/scriptnull/waymond) ![GitHub](https://img.shields.io/github/license/scriptnull/waymond)
+[![Go Report Card](https://goreportcard.com/badge/github.com/scriptnull/waymond)](https://goreportcard.com/report/github.com/scriptnull/waymond) [![lint](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml/badge.svg?branch=main)](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml) ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/scriptnull/waymond) ![GitHub](https://img.shields.io/github/license/scriptnull/waymond) [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://waymond.zulipchat.com)
 
 waymond is
 - An open-source autoscaler.
@@ -140,3 +140,13 @@ Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new)
 **Build**
 
 Run `just build` and `./waymond` binary should be ready for use.
+
+## Community
+
+The project is currently in very early stages and it would be awesome if you could join us!
+
+If you are looking to talk to a human about the waymond project, feel free join the zulip chat using the [invite here](https://waymond.zulipchat.com/join/klaodjrta3axkusdrwlwron4).
+
+If you are interested in requesting new feature or report bugs, please do so in [the issue tracker](https://github.com/scriptnull/waymond/issues).
+
+If you are looking to contribute for the first time, try checking the [issues tagged with good-first-issue](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
