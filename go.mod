@@ -6,6 +6,7 @@ require (
 	github.com/docker/docker v23.0.1+incompatible
 	github.com/knadh/koanf/parsers/toml v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
+	github.com/knadh/koanf/providers/rawbytes v0.1.0
 	github.com/knadh/koanf/v2 v2.0.0
 	github.com/robfig/cron/v3 v3.0.0
 )
