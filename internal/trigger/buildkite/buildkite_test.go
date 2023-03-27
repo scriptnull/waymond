@@ -27,8 +27,11 @@ func TestParseConfig(t *testing.T) {
 
 	for _, tc := range tt {
 		k := koanf.New(".")
-		k.Load(rawbytes.Provider([]byte(tc.config)), toml.Parser())
-		_, err := ParseConfig(k)
+		err := k.Load(rawbytes.Provider([]byte(tc.config)), toml.Parser())
+		if err != nil {
+			t.Fatal("error while loading configuration")
+		}
+		_, err = ParseConfig(k)
 		switch {
 		case tc.shouldErr && err == nil:
 			t.Error("expected to error, but did not error")
@@ -65,7 +68,10 @@ func TestRegister(t *testing.T) {
 
 	for idx, tc := range tt {
 		k := koanf.New(".")
-		k.Load(rawbytes.Provider([]byte(tc.config)), toml.Parser())
+		err := k.Load(rawbytes.Provider([]byte(tc.config)), toml.Parser())
+		if err != nil {
+			t.Fatal("error while loading configuration")
+		}
 		trigger, err := ParseConfig(k)
 		if err != nil {
 			t.Fatal("invalid test case config. Pass a valid value for config")
