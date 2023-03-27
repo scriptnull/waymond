@@ -105,7 +105,7 @@ to = "scaler.local_redis_containers"
 | cron | Available | Trigger events based on [cron expressions](https://en.wikipedia.org/wiki/Cron) |
 | http_endpoint | Looking for contribution | Starts a HTTP server in waymond and triggers event for every HTTP request |
 | http_client | Looking for contribution | Creates a HTTP client in waymond and triggers event based on the HTTP response |
-| buildkite | [Planned](https://github.com/scriptnull/waymond/milestone/1) | Trigger event based on the CI job queue length in Buildkite |
+| buildkite | [In progress](https://github.com/scriptnull/waymond/milestone/1) | Trigger event based on the CI job queue length in Buildkite |
 
 Propose a new trigger [here](https://github.com/scriptnull/waymond/issues/new).
 
