@@ -71,6 +71,14 @@ func (t *Trigger) Do(_ []byte) error {
 	var metrics struct {
 		Jobs struct {
 			Queues map[string]struct {
+				// Scheduled will give us the number of jobs that are waiting for an agent to pick up
+				Scheduled int
+
+				// Waiting will give the jobs which are waiting to be scheduled.
+				// example: job B will be waiting for job A if those are connected by the `depends_on` and job A is not finished
+				// Besides jobs to go to "Waiting" state infinitely if there is a missing step dependency.
+				// example: job B depends on job C and job C is not present in the build.
+				// Hence, it is better to neglect it during auto-scaling.
 				Waiting int
 			}
 		} `json:"jobs"`
@@ -80,8 +88,21 @@ func (t *Trigger) Do(_ []byte) error {
 		return fmt.Errorf("unable to decode response body: %s", err)
 	}
 
+	type outputData struct {
+		Queue              string `json:"queue"`
+		ScheduledJobsCount int    `json:"scheduled_jobs_count"`
+	}
 	for qName, q := range metrics.Jobs.Queues {
-		t.log.Debugf("qName: %s, waitingSize: %d \n", qName, q.Waiting)
+		t.log.Debugf("qName: %s, waitingSize: %d \n", qName, q.Scheduled)
+		data := outputData{
+			Queue:              qName,
+			ScheduledJobsCount: q.Scheduled,
+		}
+		rawData, err := json.Marshal(data)
+		if err != nil {
+			event.B.Publish(fmt.Sprintf("%s.error", t.namespacedID), []byte(err.Error()))
+		}
+		event.B.Publish(fmt.Sprintf("%s.output", t.namespacedID), rawData)
 	}
 
 	return nil
