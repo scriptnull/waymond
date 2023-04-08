@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/knadh/koanf/v2"
+	"github.com/scriptnull/waymond/internal/event"
 	"github.com/scriptnull/waymond/internal/log"
 
 	"github.com/scriptnull/waymond/internal/trigger"
@@ -22,6 +23,8 @@ type Trigger struct {
 	log          log.Logger
 	id           string
 	namespacedID string
+
+	req *http.Request
 }
 
 func (t *Trigger) Type() trigger.Type {
@@ -40,8 +43,19 @@ func (t *Trigger) Register(ctx context.Context) error {
 	}
 	req.Header.Add("User-Agent", "waymond-autoscaler")
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", buildkiteToken))
+	t.req = req
 
-	resp, err := http.DefaultClient.Do(req)
+	event.B.Subscribe(fmt.Sprintf("%s.input", t.namespacedID), func(data []byte) {
+		t.log.Debug("start of input event")
+		_ = t.Do(data)
+		t.log.Debug("end of input event")
+	})
+
+	return nil
+}
+
+func (t *Trigger) Do(_ []byte) error {
+	resp, err := http.DefaultClient.Do(t.req)
 	if err != nil {
 		return fmt.Errorf("error in making buildkite api call: %s", err)
 	}

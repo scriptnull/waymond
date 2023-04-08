@@ -1,0 +1,20 @@
+#
+# cron -> buildkite
+#
+# For every 1 minute, waymond will check if there is new jobs waiting to be scheduled in buildkite
+
+[[trigger]]
+type = "cron"
+id = "global_cron"
+expression = "*/1 * * * *"
+
+[[trigger]]
+type = "buildkite"
+id = "my_buildkite_org"
+# set BUILDKITE_TOKEN environment variable
+
+[[connect]]
+type = "direct"
+id = "check_my_buildkite_org_queues_periodically"
+from = "trigger.global_cron"
+to = "trigger.my_buildkite_org"

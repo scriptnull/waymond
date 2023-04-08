@@ -3,6 +3,7 @@ package direct
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/internal/connector"
@@ -21,8 +22,8 @@ func (c *Connector) Type() connector.Type {
 }
 
 func (c *Connector) Register(ctx context.Context) error {
-	event.B.Subscribe(c.from, func() {
-		event.B.Publish(c.to, []byte(""))
+	event.B.Subscribe(fmt.Sprintf("%s.output", c.from), func(data []byte) {
+		event.B.Publish(fmt.Sprintf("%s.input", c.to), data)
 	})
 
 	return nil

@@ -29,7 +29,7 @@ func (t *Trigger) Register(ctx context.Context) error {
 	c := cron.New()
 	_, err := c.AddFunc(t.cronExpr, func() {
 		t.log.Verbose("publishing event")
-		event.B.Publish(t.namespacedID, []byte{})
+		event.B.Publish(fmt.Sprintf("%s.output", t.namespacedID), []byte{})
 	})
 	if err != nil {
 		return err

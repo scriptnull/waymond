@@ -37,7 +37,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	event.B.Subscribe(s.namespacedID, func() {
+	event.B.Subscribe(s.namespacedID, func(_ []byte) {
 		s.log.Verbose("start")
 
 		imageFullName := fmt.Sprintf("%s:%s", s.imageName, s.imageTag)
