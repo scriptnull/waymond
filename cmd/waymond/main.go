@@ -18,6 +18,7 @@ import (
 	"github.com/scriptnull/waymond/internal/scaler"
 	"github.com/scriptnull/waymond/internal/scaler/docker"
 	"github.com/scriptnull/waymond/internal/trigger"
+	"github.com/scriptnull/waymond/internal/trigger/buildkite"
 	"github.com/scriptnull/waymond/internal/trigger/cron"
 )
 
@@ -42,6 +43,7 @@ func main() {
 	// track available trigger configuration parsers available out of the box in waymond
 	triggerConfigParsers := make(map[trigger.Type]func(*koanf.Koanf) (trigger.Interface, error))
 	triggerConfigParsers[cron.Type] = cron.ParseConfig
+	triggerConfigParsers[buildkite.Type] = buildkite.ParseConfig
 
 	// extract triggers from trigger configurations
 	triggerConfigs := k.Slices("trigger")
