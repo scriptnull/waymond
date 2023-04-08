@@ -1,0 +1,37 @@
+#
+# cron -> buildkite
+#
+# For every 1 minute, waymond will check if there is new jobs waiting to be scheduled in buildkite
+# If yes, it will try to schedule it in the respective autoscaling group
+
+[[trigger]]
+type = "cron"
+id = "global_cron"
+expression = "*/1 * * * *"
+
+[[trigger]]
+type = "buildkite"
+id = "my_buildkite_org"
+# set BUILDKITE_TOKEN environment variable
+
+[[connect]]
+type = "direct"
+id = "check_my_buildkite_org_queues_periodically"
+from = "trigger.global_cron"
+to = "trigger.my_buildkite_org"
+
+[[scaler]]
+type = "aws_ec2_asg"
+id = "my_aws_org_asg_scaler"
+
+[[connect]]
+type = "go_template"
+id = "connect_buildkite_metrics_to_aws_asg"
+from = "trigger.my_buildkite_org"
+to = "scaler.my_aws_org_asg_scaler"
+output = """
+{
+  "asg_name": "{{ .Queue }}",
+  "desired_count": {{ .SchduledJobCount }}
+}
+"""
