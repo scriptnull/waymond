@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# cron
+# Cron
 
 Periodically trigger events in waymond.
 

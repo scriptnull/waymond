@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# buildkite
+# Buildkite
 
 Trigger events for buildkite jobs waiting to be run on various buildkite queues.
 
