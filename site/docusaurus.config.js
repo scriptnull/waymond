@@ -71,24 +71,20 @@ const config = {
         },
         items: [
           {
+            href: "/waymond/docs/intro",
+            label: "Documentation",
+            position: "left"
+          },
+          {
             href: 'https://github.com/scriptnull/waymond',
             label: 'GitHub',
-            position: 'right',
+            position: 'left',
           },
         ],
       },
       footer: {
         style: 'dark',
         links: [
-          {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Introduction',
-                to: '/docs/intro',
-              },
-            ],
-          },
           {
             title: 'Community',
             items: [
