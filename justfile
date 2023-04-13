@@ -3,3 +3,6 @@ lint:
 
 build: lint
   go build -o waymond cmd/waymond/main.go
+
+deploy:
+  pushd site && USE_SSH=true npm run deploy && popd
