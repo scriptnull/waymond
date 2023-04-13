@@ -6,3 +6,6 @@ build: lint
 
 deploy:
   pushd site && USE_SSH=true npm run deploy && popd
+
+run-site:
+  pushd site && npm run start && popd
