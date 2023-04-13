@@ -136,6 +136,9 @@ Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new)
 
 1. [Go](https://go.dev/) v1.19 or above
 1. [Just](https://github.com/casey/just)
+1. [Node.js](https://nodejs.org/en) 16 or above (optional, only needed for building documentation site)
+
+If you are a user of [nix](https://nixos.org/) package manager, you can enter the `nix-shell` to automatically download all the above dependencies.
 
 **Build**
 
