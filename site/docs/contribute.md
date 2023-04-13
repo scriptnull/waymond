@@ -34,7 +34,7 @@ $ just build
 $ ./waymond
 ```
 
-# Develop Docs
+## Develop Docs
 
 ```sh
 $ just run-site
