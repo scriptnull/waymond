@@ -30,7 +30,7 @@ from = "trigger.my_buildkite_org"
 to = "scaler.noop"
 [connect.transform]
 method = "go_template"
-data = """
+template = """
 {
   "asg_name": "{{ .queue }}",
   "desired_count": {{ .scheduled_jobs_count }}
