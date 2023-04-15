@@ -28,3 +28,11 @@ type = "direct"
 id = "print_trigger_output"
 from = "trigger.my_buildkite_org"
 to = "scaler.noop"
+[connect.transform]
+method = "go_template"
+data = """
+{
+  "asg_name": "{{ .Queue }}",
+  "desired_count": {{ .ScheduledJobsCount }}
+}
+"""
