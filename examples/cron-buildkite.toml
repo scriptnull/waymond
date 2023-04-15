@@ -18,3 +18,13 @@ type = "direct"
 id = "check_my_buildkite_org_queues_periodically"
 from = "trigger.global_cron"
 to = "trigger.my_buildkite_org"
+
+[[scaler]]
+type = "noop"
+id = "noop"
+
+[[connect]]
+type = "direct"
+id = "print_trigger_output"
+from = "trigger.my_buildkite_org"
+to = "scaler.noop"
