@@ -34,7 +34,11 @@ export default function Home() {
       description="Description will go into a meta tag in <head />">
       <HomepageHeader />
       <main>
-        {/* TODO */}
+        <section className={styles.vidsection}>
+          <center>
+            <iframe width="1024" height="520" src="https://www.youtube.com/embed/DuKksePAJ_o?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </center>
+        </section>
       </main>
     </Layout>
   );

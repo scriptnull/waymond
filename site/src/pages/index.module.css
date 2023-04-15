@@ -21,3 +21,9 @@
   align-items: center;
   justify-content: center;
 }
+
+.vidsection {
+  background-color: black;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
