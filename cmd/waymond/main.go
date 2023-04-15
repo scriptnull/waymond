@@ -17,6 +17,7 @@ import (
 	"github.com/scriptnull/waymond/internal/log"
 	"github.com/scriptnull/waymond/internal/scaler"
 	"github.com/scriptnull/waymond/internal/scaler/docker"
+	"github.com/scriptnull/waymond/internal/scaler/noop"
 	"github.com/scriptnull/waymond/internal/trigger"
 	"github.com/scriptnull/waymond/internal/trigger/buildkite"
 	"github.com/scriptnull/waymond/internal/trigger/cron"
@@ -83,6 +84,7 @@ func main() {
 	// track available trigger configuration parsers available out of the box in waymond
 	scalerConfigParsers := make(map[scaler.Type]func(*koanf.Koanf) (scaler.Interface, error))
 	scalerConfigParsers[docker.Type] = docker.ParseConfig
+	scalerConfigParsers[noop.Type] = noop.ParseConfig
 
 	// extract scalers from scaler configurations
 	scalerConfigs := k.Slices("scaler")
