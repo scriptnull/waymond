@@ -27,6 +27,7 @@ func (s *Scaler) Type() scaler.Type {
 func (s *Scaler) Register(ctx context.Context) error {
 	event.B.Subscribe(fmt.Sprintf("%s.input", s.namespacedID), func(data []byte) {
 		s.log.Verbose("data = ", string(data))
+		event.B.Publish(fmt.Sprintf("%s.output", s.namespacedID), data)
 	})
 	return nil
 }
