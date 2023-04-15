@@ -1,8 +1,11 @@
 package transform
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"text/template"
 
 	"github.com/knadh/koanf/v2"
 )
@@ -10,6 +13,7 @@ import (
 var (
 	ErrUnknownTransformer   = errors.New("unknown transformer")
 	ErrInvalidConfiguration = errors.New("invalid configuration")
+	ErrNotAJSONInput        = errors.New("not a json input")
 )
 
 type Transformer interface {
@@ -27,13 +31,13 @@ func ParseConfig(k *koanf.Koanf) (Transformer, error) {
 
 func newGoTemplate(k *koanf.Koanf) (*goTemplate, error) {
 	templateFieldPath := "transform.template"
-	template := k.String(templateFieldPath)
-	if template == "" {
+	templateString := k.String(templateFieldPath)
+	if templateString == "" {
 		return nil, fmt.Errorf("%w: missing %s", ErrInvalidConfiguration, templateFieldPath)
 	}
 
 	return &goTemplate{
-		template: template,
+		template: templateString,
 	}, nil
 }
 
@@ -42,5 +46,15 @@ type goTemplate struct {
 }
 
 func (g *goTemplate) Transform(inputData []byte) ([]byte, error) {
-	return nil, nil
+	var input interface{}
+	err := json.Unmarshal(inputData, &input)
+	if err != nil {
+		return nil, ErrNotAJSONInput
+	}
+
+	// TODO: maybe use a global instance of template while tranforming
+	templ := template.Must(template.New("transform").Parse(g.template))
+	buf := bytes.NewBuffer([]byte(""))
+	templ.Execute(buf, input)
+	return buf.Bytes(), nil
 }
