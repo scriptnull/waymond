@@ -55,6 +55,9 @@ func (g *goTemplate) Transform(inputData []byte) ([]byte, error) {
 	// TODO: maybe use a global instance of template while tranforming
 	templ := template.Must(template.New("transform").Parse(g.template))
 	buf := bytes.NewBuffer([]byte(""))
-	templ.Execute(buf, input)
+	err = templ.Execute(buf, input)
+	if err != nil {
+		return nil, err
+	}
 	return buf.Bytes(), nil
 }

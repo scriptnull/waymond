@@ -32,7 +32,7 @@ to = "scaler.noop"
 method = "go_template"
 data = """
 {
-  "asg_name": "{{ .Queue }}",
-  "desired_count": {{ .ScheduledJobsCount }}
+  "asg_name": "{{ .queue }}",
+  "desired_count": {{ .scheduled_jobs_count }}
 }
 """
