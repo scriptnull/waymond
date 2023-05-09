@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://user-images.githubusercontent.com/4211715/233856711-5d876307-24fd-41e8-858a-9948b8fc880d.svg" height="256px">
   <br><br>
-  <i>Autoscale Anything Anywhere All at once! :eyes:</i>
+  <b>waymond</b> - <i>Autoscale Anything Anywhere All at once! :eyes:</i>
   <br>
 </p>
 
