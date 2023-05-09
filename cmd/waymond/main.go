@@ -16,6 +16,7 @@ import (
 	"github.com/scriptnull/waymond/internal/event"
 	"github.com/scriptnull/waymond/internal/log"
 	"github.com/scriptnull/waymond/internal/scaler"
+	"github.com/scriptnull/waymond/internal/scaler/awsec2asg"
 	"github.com/scriptnull/waymond/internal/scaler/docker"
 	"github.com/scriptnull/waymond/internal/scaler/noop"
 	"github.com/scriptnull/waymond/internal/trigger"
@@ -85,6 +86,7 @@ func main() {
 	scalerConfigParsers := make(map[scaler.Type]func(*koanf.Koanf) (scaler.Interface, error))
 	scalerConfigParsers[docker.Type] = docker.ParseConfig
 	scalerConfigParsers[noop.Type] = noop.ParseConfig
+	scalerConfigParsers[awsec2asg.Type] = awsec2asg.ParseConfig
 
 	// extract scalers from scaler configurations
 	scalerConfigs := k.Slices("scaler")
