@@ -34,7 +34,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 
 	svc := autoscaling.New(sess)
 
-	event.B.Subscribe(s.namespacedID, func(data []byte) {
+	event.B.Subscribe(fmt.Sprintf("%s.input", s.namespacedID), func(data []byte) {
 		s.log.Verbose("start")
 
 		s.log.Debugf("data: %+v\n", string(data))
@@ -51,7 +51,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 		}
 
 		var maxRecords int64 = 1
-		asgOutput, err := svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+		asg, err := svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
 			AutoScalingGroupNames: []*string{&inputData.ASGName},
 			MaxRecords:            &maxRecords,
 		})
@@ -60,19 +60,21 @@ func (s *Scaler) Register(ctx context.Context) error {
 			return
 		}
 
-		if len(asgOutput.AutoScalingGroups) != 1 {
-			s.log.Error("unable to find the autoscaling group", inputData.ASGName)
-			return
-		}
+		s.log.Debug("asg", asg)
 
-		_, err = svc.UpdateAutoScalingGroup(&autoscaling.UpdateAutoScalingGroupInput{
-			AutoScalingGroupName: &inputData.ASGName,
-			DesiredCapacity:      &inputData.DesiredCount,
-		})
-		if err != nil {
-			s.log.Error("error trying to update autoscaling group", err)
-			return
-		}
+		// if len(asgOutput.AutoScalingGroups) != 1 {
+		// 	s.log.Error("unable to find the autoscaling group", inputData.ASGName)
+		// 	return
+		// }
+
+		// _, err = svc.UpdateAutoScalingGroup(&autoscaling.UpdateAutoScalingGroupInput{
+		// 	AutoScalingGroupName: &inputData.ASGName,
+		// 	DesiredCapacity:      &inputData.DesiredCount,
+		// })
+		// if err != nil {
+		// 	s.log.Error("error trying to update autoscaling group", err)
+		// 	return
+		// }
 
 		s.log.Verbose("end")
 	})
