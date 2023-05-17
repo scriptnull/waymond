@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/internal/event"
@@ -23,6 +24,8 @@ type Trigger struct {
 	log          log.Logger
 	id           string
 	namespacedID string
+
+	filterByQueueNameRegex *regexp.Regexp
 
 	req *http.Request
 }
@@ -92,7 +95,18 @@ func (t *Trigger) Do(_ []byte) error {
 		Queue              string `json:"queue"`
 		ScheduledJobsCount int    `json:"scheduled_jobs_count"`
 	}
-	for qName, q := range metrics.Jobs.Queues {
+
+	queues := metrics.Jobs.Queues
+	if t.filterByQueueNameRegex != nil {
+		for key := range queues {
+			if t.filterByQueueNameRegex.MatchString(key) {
+				continue
+			}
+			delete(queues, key)
+		}
+	}
+
+	for qName, q := range queues {
 		t.log.Debugf("qName: %s, waitingSize: %d \n", qName, q.Scheduled)
 		data := outputData{
 			Queue:              qName,
@@ -114,9 +128,20 @@ func ParseConfig(k *koanf.Koanf) (trigger.Interface, error) {
 		return nil, errors.New("expected non-empty value for 'id' in buildkite trigger")
 	}
 
+	var filterByQueueNameRegex *regexp.Regexp
+	filterByQueueName := k.String("filter_by_queue_name")
+	if filterByQueueName != "" {
+		re, err := regexp.Compile(filterByQueueName)
+		if err != nil {
+			return nil, errors.New("expected a valid regex in 'filter_by_queue_name'")
+		}
+		filterByQueueNameRegex = re
+	}
+
 	t := &Trigger{
-		id:           id,
-		namespacedID: fmt.Sprintf("trigger.%s", id),
+		id:                     id,
+		namespacedID:           fmt.Sprintf("trigger.%s", id),
+		filterByQueueNameRegex: filterByQueueNameRegex,
 	}
 	t.log = log.New(t.namespacedID)
 
