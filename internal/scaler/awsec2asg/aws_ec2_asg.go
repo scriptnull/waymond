@@ -21,21 +21,57 @@ type Scaler struct {
 	namespacedID string
 	log          log.Logger
 
-	AllowCreate          bool                              `koanf:"allow_create"`
-	MinSize              *int64                            `koanf:"min_size"`
-	MaxSize              *int64                            `koanf:"max_size"`
-	CapacityRebalance    *bool                             `koanf:"capacity_rebalance"`
-	DefaultCooldown      *int64                            `koanf:"default_cooldown"`
-	VpcZoneIdentifier    []string                          `koanf:"vpc_zone_identifier"`
-	PlacementGroup       *string                           `koanf:"placement_group"`
-	Tags                 []ASGTag                          `koanf:"tags"`
-	MixedInstancesPolicy *autoscaling.MixedInstancesPolicy `koanf:"mixed_instances_policy"`
+	AllowCreate          bool                  `koanf:"allow_create"`
+	MinSize              *int64                `koanf:"min_size"`
+	MaxSize              *int64                `koanf:"max_size"`
+	CapacityRebalance    *bool                 `koanf:"capacity_rebalance"`
+	DefaultCooldown      *int64                `koanf:"default_cooldown"`
+	VpcZoneIdentifier    []string              `koanf:"vpc_zone_identifier"`
+	PlacementGroup       *string               `koanf:"placement_group"`
+	Tags                 []ASGTag              `koanf:"tags"`
+	MixedInstancesPolicy *MixedInstancesPolicy `koanf:"mixed_instances_policy"`
 }
 
 type ASGTag struct {
 	Key               *string `koanf:"key"`
 	Value             *string `koanf:"value"`
 	PropagateAtLaunch *bool   `koanf:"propagate_at_launch"`
+}
+
+type MixedInstancesPolicy struct {
+	InstanceDistribution *InstanceDistribution `koanf:"instances_distribution"`
+
+	LaunchTemplate *LaunchTemplate `koanf:"launch_template"`
+}
+
+type InstanceDistribution struct {
+	OnDemandAllocationStrategy       *string `koanf:"on_demand_allocation_strategy"`
+	OnDemandBaseCapacity             *int64  `koanf:"on_demand_base_capacity"`
+	OnDemandPercentAboveBaseCapacity *int64  `koanf:"on_demand_percentage_above_base_capacity"`
+	SpotAllocationStrategy           *string `koanf:"spot_allocation_strategy"`
+	SpotInstancePools                *int64  `koanf:"spot_instance_pools"`
+	SpotMaxPrice                     *string `koanf:"spot_max_price"`
+}
+
+type LaunchTemplate struct {
+	LaunchTemplateSpecification *LaunchTemplateSpecification `koanf:"launch_template_specification"`
+	Overrides                   []*LaunchTemplateOverrides   `koanf:"overrides"`
+}
+
+type LaunchTemplateSpecification struct {
+	LaunchTemplateId   *string `koanf:"launch_template_id"`
+	LaunchTemplateName *string `koanf:"launch_template_name"`
+	Version            *string `koanf:"version"`
+}
+
+type LaunchTemplateOverrides struct {
+	// TODO: too much of struct nesting in InstanceRequirements
+	// so add it here when we actually need it.
+	// InstanceRequirements        *InstanceRequirements        `koanf:"instance_requirements"`
+
+	InstanceType                *string                      `koanf:"instance_type"`
+	LaunchTemplateSpecification *LaunchTemplateSpecification `koanf:"launch_template_specification"`
+	WeightedCapacity            *string                      `koanf:"weighted_capacity"`
 }
 
 func (s *Scaler) Type() scaler.Type {
@@ -56,9 +92,10 @@ func (s *Scaler) Register(ctx context.Context) error {
 		s.log.Debugf("data: %+v\n", string(data))
 
 		var inputData struct {
-			ASGName      string   `json:"asg_name"`
-			DesiredCount int64    `json:"desired_count"`
-			Tags         []ASGTag `json:"tags"`
+			ASGName      string                    `json:"asg_name"`
+			DesiredCount int64                     `json:"desired_count"`
+			Tags         []ASGTag                  `json:"tags"`
+			Overrides    []LaunchTemplateOverrides `json:"overrides"`
 		}
 
 		err := json.Unmarshal(data, &inputData)
@@ -94,12 +131,11 @@ func (s *Scaler) Register(ctx context.Context) error {
 				AutoScalingGroupName: &inputData.ASGName,
 				DesiredCapacity:      &inputData.DesiredCount,
 
-				MinSize:              s.MinSize,
-				MaxSize:              s.MaxSize,
-				CapacityRebalance:    s.CapacityRebalance,
-				DefaultCooldown:      s.DefaultCooldown,
-				PlacementGroup:       s.PlacementGroup,
-				MixedInstancesPolicy: s.MixedInstancesPolicy,
+				MinSize:           s.MinSize,
+				MaxSize:           s.MaxSize,
+				CapacityRebalance: s.CapacityRebalance,
+				DefaultCooldown:   s.DefaultCooldown,
+				PlacementGroup:    s.PlacementGroup,
 			}
 			if len(s.VpcZoneIdentifier) > 0 {
 				vpcZoneIdentifiers := strings.Join(s.VpcZoneIdentifier, ",")
@@ -114,6 +150,37 @@ func (s *Scaler) Register(ctx context.Context) error {
 						PropagateAtLaunch: asgTag.PropagateAtLaunch,
 					})
 				}
+			}
+
+			if s.MixedInstancesPolicy != nil {
+				createAsgInput.MixedInstancesPolicy = &autoscaling.MixedInstancesPolicy{
+					InstancesDistribution: &autoscaling.InstancesDistribution{
+						OnDemandAllocationStrategy:          s.MixedInstancesPolicy.InstanceDistribution.OnDemandAllocationStrategy,
+						OnDemandBaseCapacity:                s.MixedInstancesPolicy.InstanceDistribution.OnDemandBaseCapacity,
+						OnDemandPercentageAboveBaseCapacity: s.MixedInstancesPolicy.InstanceDistribution.OnDemandPercentAboveBaseCapacity,
+						SpotAllocationStrategy:              s.MixedInstancesPolicy.InstanceDistribution.SpotAllocationStrategy,
+						SpotInstancePools:                   s.MixedInstancesPolicy.InstanceDistribution.SpotInstancePools,
+						SpotMaxPrice:                        s.MixedInstancesPolicy.InstanceDistribution.SpotMaxPrice,
+					},
+					LaunchTemplate: &autoscaling.LaunchTemplate{
+						LaunchTemplateSpecification: &autoscaling.LaunchTemplateSpecification{
+							LaunchTemplateId:   s.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification.LaunchTemplateId,
+							LaunchTemplateName: s.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification.LaunchTemplateName,
+							Version:            s.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification.Version,
+						},
+					},
+				}
+			}
+
+			for _, o := range inputData.Overrides {
+				createAsgInput.MixedInstancesPolicy.LaunchTemplate.Overrides = append(createAsgInput.MixedInstancesPolicy.LaunchTemplate.Overrides, &autoscaling.LaunchTemplateOverrides{
+					InstanceType: o.InstanceType,
+					LaunchTemplateSpecification: &autoscaling.LaunchTemplateSpecification{
+						LaunchTemplateId:   o.LaunchTemplateSpecification.LaunchTemplateId,
+						LaunchTemplateName: o.LaunchTemplateSpecification.LaunchTemplateName,
+						Version:            o.LaunchTemplateSpecification.Version,
+					},
+				})
 			}
 
 			s.log.Debug("create asg input", createAsgInput)

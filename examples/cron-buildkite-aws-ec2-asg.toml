@@ -25,6 +25,12 @@ capacity_rebalance = true
 default_cooldown = 60
 vpc_zone_identifier = ["SUBNET_ID"]
 placement_group = "PLACEMENT_GROUP_ID"
+[scaler.mixed_instances_policy.instances_distribution]
+on_demand_percentage_above_base_capacity = 100
+
+[scaler.mixed_instances_policy.launch_template.launch_template_specification]
+launch_template_name = "launch-template-for-waymond"
+
 [[scaler.tags]]
 key = "buildkite-agent-tag:idle_timeout"
 value = 120
