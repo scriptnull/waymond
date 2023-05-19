@@ -12,19 +12,37 @@ expression = "*/1 * * * *"
 [[trigger]]
 type = "buildkite"
 id = "my_buildkite_org"
+filter_by_queue_name = "aws-on-demand-arm64-ubuntu-.*-ami-.*"
 # set BUILDKITE_TOKEN environment variable
 
 [[scaler]]
 type = "aws_ec2_asg"
 id = "my_aws_org_asg_scaler"
+allow_create = true
+min_size = 1
+max_size = 5
+capacity_rebalance = true
+default_cooldown = 60
+vpc_zone_identifier = ["SUBNET_ID"]
+placement_group = "PLACEMENT_GROUP_ID"
+[[scaler.tags]]
+key = "buildkite-agent-tag:idle_timeout"
+value = 120
+propagate_at_launch = true
 
 [[connect]]
+#
+# cron -> buildkite
+#
 type = "direct"
 id = "check_my_buildkite_org_queues_periodically"
 from = "trigger.global_cron"
 to = "trigger.my_buildkite_org"
 
 [[connect]]
+#
+# buildkite -> aws ec2 asg
+#
 type = "direct"
 id = "connect_buildkite_and_aws"
 from = "trigger.my_buildkite_org"
@@ -34,6 +52,13 @@ method = "go_template"
 template = """
 {
   "asg_name": "{{ .queue }}",
-  "desired_count": {{ .scheduled_jobs_count }}
+  "desired_count": {{ .scheduled_jobs_count }},
+  "tags": [
+    {
+      "key": "buildkite-agent-tag:queue",
+      "value": "{{ .queue }}",
+      "propagate_at_launch": true
+    }
+  ]
 }
 """
