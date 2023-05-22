@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/knadh/koanf/v2"
 	"github.com/scriptnull/waymond/internal/event"
 	"github.com/scriptnull/waymond/internal/log"
@@ -59,9 +60,11 @@ type LaunchTemplate struct {
 }
 
 type LaunchTemplateSpecification struct {
-	LaunchTemplateId   *string `koanf:"launch_template_id"`
-	LaunchTemplateName *string `koanf:"launch_template_name"`
-	Version            *string `koanf:"version"`
+	LaunchTemplateId   *string                        `koanf:"launch_template_id" json:"launch_template_id"`
+	LaunchTemplateName *string                        `koanf:"launch_template_name" json:"launch_template_name"`
+	Version            *string                        `koanf:"version" json:"version"`
+	CreateIfNotExists  *bool                          `koanf:"create_if_not_exists" json:"create_if_not_exists"`
+	Spec               *ec2.CreateLaunchTemplateInput `koanf:"spec" json:"spec"`
 }
 
 type LaunchTemplateOverrides struct {
@@ -69,9 +72,9 @@ type LaunchTemplateOverrides struct {
 	// so add it here when we actually need it.
 	// InstanceRequirements        *InstanceRequirements        `koanf:"instance_requirements"`
 
-	InstanceType                *string                      `koanf:"instance_type"`
-	LaunchTemplateSpecification *LaunchTemplateSpecification `koanf:"launch_template_specification"`
-	WeightedCapacity            *string                      `koanf:"weighted_capacity"`
+	InstanceType                *string                      `koanf:"instance_type" json:"instance_type"`
+	LaunchTemplateSpecification *LaunchTemplateSpecification `koanf:"launch_template_specification" json:"launch_template_specification"`
+	WeightedCapacity            *string                      `koanf:"weighted_capacity" json:"weighted_capacity"`
 }
 
 func (s *Scaler) Type() scaler.Type {
@@ -85,6 +88,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 	}
 
 	svc := autoscaling.New(sess)
+	ec2svc := ec2.New(sess)
 
 	event.B.Subscribe(fmt.Sprintf("%s.input", s.namespacedID), func(data []byte) {
 		s.log.Verbose("start")
@@ -95,7 +99,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 			ASGName      string                    `json:"asg_name"`
 			DesiredCount int64                     `json:"desired_count"`
 			Tags         []ASGTag                  `json:"tags"`
-			Overrides    []LaunchTemplateOverrides `json:"overrides"`
+			Overrides    []LaunchTemplateOverrides `json:"launch_template_overrides"`
 		}
 
 		err := json.Unmarshal(data, &inputData)
@@ -173,6 +177,43 @@ func (s *Scaler) Register(ctx context.Context) error {
 			}
 
 			for _, o := range inputData.Overrides {
+				s.log.Debugf("o = %+v", o)
+
+				if o.LaunchTemplateSpecification.CreateIfNotExists != nil && *o.LaunchTemplateSpecification.CreateIfNotExists {
+					if o.LaunchTemplateSpecification.Spec == nil {
+						s.log.Error("create_if_not_exists option for launch template expects spec object to be present")
+						return
+					}
+
+					// check if the launch template exists
+					lts, err := ec2svc.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
+						LaunchTemplateNames: []*string{o.LaunchTemplateSpecification.LaunchTemplateName},
+					})
+					if err != nil {
+						if !strings.Contains(err.Error(), "InvalidLaunchTemplateName.NotFoundException") {
+							s.log.Error("error while checking for launch template", err)
+							continue
+						}
+					}
+
+					if lts != nil && len(lts.LaunchTemplates) > 0 {
+						s.log.Debugf("launch template named %s exists, so avoiding the creation of it.", *o.LaunchTemplateSpecification.LaunchTemplateName)
+						continue
+					}
+
+					// create a launch template
+					s.log.Verbosef("launch template named %s does not exist, so creating it.", *o.LaunchTemplateSpecification.LaunchTemplateName)
+					o.LaunchTemplateSpecification.Spec.LaunchTemplateName = o.LaunchTemplateSpecification.LaunchTemplateName
+					s.log.Debug("launch template spec", o.LaunchTemplateSpecification.Spec)
+					ltOut, err := ec2svc.CreateLaunchTemplate(o.LaunchTemplateSpecification.Spec)
+					if err != nil {
+						s.log.Error("error while creating launch template", err)
+						continue
+					}
+
+					s.log.Verbosef("created a new launch template: %s", ltOut)
+				}
+
 				createAsgInput.MixedInstancesPolicy.LaunchTemplate.Overrides = append(createAsgInput.MixedInstancesPolicy.LaunchTemplate.Overrides, &autoscaling.LaunchTemplateOverrides{
 					InstanceType: o.InstanceType,
 					LaunchTemplateSpecification: &autoscaling.LaunchTemplateSpecification{
@@ -184,6 +225,12 @@ func (s *Scaler) Register(ctx context.Context) error {
 			}
 
 			s.log.Debug("create asg input", createAsgInput)
+
+			// // check if ASG alreadexists
+			// svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+			// 	AutoScalingGroupNames: ,
+			// })
+
 			// createdASG, err := svc.CreateAutoScalingGroup(createAsgInput)
 			// if err != nil {
 			// 	s.log.Error("error while creating ASG", err)
