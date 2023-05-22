@@ -40,6 +40,8 @@ template = """
 """
 ```
 
+`go_template` method also supports functions in [sprig library](http://masterminds.github.io/sprig/) along with default golang template functions.
+
 ## Example
 
 The following waymond config would periodically trigger the `buildkite` trigger. The `direct` connector with the `transform` block will make use of the output of `buildkite` trigger event and pass it to the specified Go template to produce the new data that will be sent to the destination of the connector.

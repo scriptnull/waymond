@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/knadh/koanf/v2"
 )
 
@@ -53,7 +54,7 @@ func (g *goTemplate) Transform(inputData []byte) ([]byte, error) {
 	}
 
 	// TODO: maybe use a global instance of template while tranforming
-	templ := template.Must(template.New("transform").Parse(g.template))
+	templ := template.Must(template.New("transform").Funcs(sprig.FuncMap()).Parse(g.template))
 	buf := bytes.NewBuffer([]byte(""))
 	err = templ.Execute(buf, input)
 	if err != nil {
