@@ -177,7 +177,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 			}
 
 			for _, o := range inputData.Overrides {
-				s.log.Debugf("o = %+v", o)
+				s.log.Debugf("o = %+v \n", o)
 
 				if o.LaunchTemplateSpecification.CreateIfNotExists != nil && *o.LaunchTemplateSpecification.CreateIfNotExists {
 					if o.LaunchTemplateSpecification.Spec == nil {
@@ -197,12 +197,12 @@ func (s *Scaler) Register(ctx context.Context) error {
 					}
 
 					if lts != nil && len(lts.LaunchTemplates) > 0 {
-						s.log.Debugf("launch template named %s exists, so avoiding the creation of it.", *o.LaunchTemplateSpecification.LaunchTemplateName)
+						s.log.Debugf("launch template named %s exists, so avoiding the creation of it.\n", *o.LaunchTemplateSpecification.LaunchTemplateName)
 						continue
 					}
 
 					// create a launch template
-					s.log.Verbosef("launch template named %s does not exist, so creating it.", *o.LaunchTemplateSpecification.LaunchTemplateName)
+					s.log.Verbosef("launch template named %s does not exist, so creating it.\n", *o.LaunchTemplateSpecification.LaunchTemplateName)
 					o.LaunchTemplateSpecification.Spec.LaunchTemplateName = o.LaunchTemplateSpecification.LaunchTemplateName
 					s.log.Debug("launch template spec", o.LaunchTemplateSpecification.Spec)
 					ltOut, err := ec2svc.CreateLaunchTemplate(o.LaunchTemplateSpecification.Spec)
@@ -211,9 +211,11 @@ func (s *Scaler) Register(ctx context.Context) error {
 						continue
 					}
 
-					s.log.Verbosef("created a new launch template: %s", ltOut)
+					s.log.Verbosef("created a new launch template: %s\n", ltOut)
 				}
+			}
 
+			for _, o := range inputData.Overrides {
 				createAsgInput.MixedInstancesPolicy.LaunchTemplate.Overrides = append(createAsgInput.MixedInstancesPolicy.LaunchTemplate.Overrides, &autoscaling.LaunchTemplateOverrides{
 					InstanceType: o.InstanceType,
 					LaunchTemplateSpecification: &autoscaling.LaunchTemplateSpecification{
@@ -224,20 +226,14 @@ func (s *Scaler) Register(ctx context.Context) error {
 				})
 			}
 
+			s.log.Verbosef("ASG named %s does not exist. So creating it.\n", *createAsgInput.AutoScalingGroupName)
 			s.log.Debug("create asg input", createAsgInput)
-
-			// // check if ASG alreadexists
-			// svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
-			// 	AutoScalingGroupNames: ,
-			// })
-
-			// createdASG, err := svc.CreateAutoScalingGroup(createAsgInput)
-			// if err != nil {
-			// 	s.log.Error("error while creating ASG", err)
-			// 	return
-			// }
-			// s.log.Debug("created asg", createdASG)
-			// s.log.Verbosef("successfully created a new ASG: %s", createdASG.String())
+			createdASG, err := svc.CreateAutoScalingGroup(createAsgInput)
+			if err != nil {
+				s.log.Error("error while creating ASG", err)
+				return
+			}
+			s.log.Verbosef("created a new ASG: %s", createdASG)
 			return
 		}
 
