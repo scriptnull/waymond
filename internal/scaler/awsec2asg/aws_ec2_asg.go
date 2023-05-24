@@ -96,10 +96,11 @@ func (s *Scaler) Register(ctx context.Context) error {
 		s.log.Debugf("data: %+v\n", string(data))
 
 		var inputData struct {
-			ASGName      string                    `json:"asg_name"`
-			DesiredCount int64                     `json:"desired_count"`
-			Tags         []ASGTag                  `json:"tags"`
-			Overrides    []LaunchTemplateOverrides `json:"launch_template_overrides"`
+			ASGName        string                       `json:"asg_name"`
+			DesiredCount   int64                        `json:"desired_count"`
+			Tags           []ASGTag                     `json:"tags"`
+			LaunchTemplate *LaunchTemplateSpecification `json:"launch_template"`
+			Overrides      []LaunchTemplateOverrides    `json:"launch_template_overrides"`
 		}
 
 		err := json.Unmarshal(data, &inputData)
