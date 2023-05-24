@@ -266,14 +266,6 @@ func (s *Scaler) Register(ctx context.Context) error {
 					override.InstanceType = o.InstanceType
 				}
 
-				// if preferredLaunchTemplateVersion != nil {
-				// 	stringVersion := fmt.Sprintf("%d", *preferredLaunchTemplateVersion.VersionNumber)
-				// 	override.LaunchTemplateSpecification = &autoscaling.LaunchTemplateSpecification{
-				// 		LaunchTemplateId: preferredLaunchTemplateVersion.LaunchTemplateId,
-				// 		Version:          &stringVersion,
-				// 	}
-				// }
-
 				if o.LaunchTemplateSpecification != nil {
 					override.LaunchTemplateSpecification = &autoscaling.LaunchTemplateSpecification{
 						LaunchTemplateId:   o.LaunchTemplateSpecification.LaunchTemplateId,
