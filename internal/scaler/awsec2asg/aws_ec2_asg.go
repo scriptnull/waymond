@@ -289,12 +289,12 @@ func (s *Scaler) Register(ctx context.Context) error {
 
 			s.log.Verbosef("ASG named %s does not exist. So creating it.\n", *createAsgInput.AutoScalingGroupName)
 			s.log.Debug("create asg input", createAsgInput)
-			createdASG, err := svc.CreateAutoScalingGroup(createAsgInput)
+			_, err = svc.CreateAutoScalingGroup(createAsgInput)
 			if err != nil {
 				s.log.Error("error while creating ASG", err)
 				return
 			}
-			s.log.Verbosef("created a new ASG: %s", createdASG)
+			s.log.Verbosef("created a new ASG: %s\n", *createAsgInput.AutoScalingGroupName)
 		}
 
 		asgOutput, err = svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
