@@ -23,6 +23,8 @@ type Scaler struct {
 	log          log.Logger
 
 	AllowCreate          bool                  `koanf:"allow_create"`
+	DisableScaleIn       *bool                 `koanf:"disable_scale_in"`
+	DisableScaleOut      *bool                 `koanf:"disable_scale_out"`
 	MinSize              *int64                `koanf:"min_size"`
 	MaxSize              *int64                `koanf:"max_size"`
 	CapacityRebalance    *bool                 `koanf:"capacity_rebalance"`
@@ -110,54 +112,8 @@ func (s *Scaler) Register(ctx context.Context) error {
 			return
 		}
 
-		// ensure launch template and its versions are available for the autoscaling group to make use of
-		var preferredLaunchTemplateVersion *ec2.LaunchTemplateVersion
-		if inputData.LaunchTemplateVersionOpts.AmiID != nil {
-			if inputData.BaseLaunchTemplate == nil {
-				s.log.Error("'base_launch_template' is required input for the aws_ec2_asg scaler if 'launch_template_version_options' is mentioned \n")
-				return
-			}
-			s.log.Verbosef("querying for a launch template version with AMI ID: %s \n", *inputData.LaunchTemplateVersionOpts.AmiID)
-			imageId := "image-id"
-			ltvs, err := ec2svc.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
-				LaunchTemplateId:   inputData.BaseLaunchTemplate.LaunchTemplateId,
-				LaunchTemplateName: inputData.BaseLaunchTemplate.LaunchTemplateName,
-				Filters: []*ec2.Filter{
-					{
-						Name:   &imageId,
-						Values: []*string{inputData.LaunchTemplateVersionOpts.AmiID},
-					},
-				},
-			})
-			if err != nil {
-				s.log.Errorf("error querying for a launch template version containing AMI ID (%s): %s \n", *inputData.LaunchTemplateVersionOpts.AmiID, err)
-				return
-			}
-			if ltvs != nil && len(ltvs.LaunchTemplateVersions) > 0 {
-				ltv := ltvs.LaunchTemplateVersions[0]
-				s.log.Verbosef("found a launch template version containing the given AMI ID: %s, launch template version: %d \n", *inputData.LaunchTemplateVersionOpts.AmiID, *ltv.VersionNumber)
-				preferredLaunchTemplateVersion = ltv
-			} else {
-				s.log.Verbosef("unable to find a launch template version containing the given AMI ID: %s, so creating one. \n", *inputData.LaunchTemplateVersionOpts.AmiID)
-				ltv, err := ec2svc.CreateLaunchTemplateVersion(&ec2.CreateLaunchTemplateVersionInput{
-					LaunchTemplateName: inputData.BaseLaunchTemplate.LaunchTemplateName,
-					LaunchTemplateId:   inputData.BaseLaunchTemplate.LaunchTemplateId,
-					SourceVersion:      inputData.BaseLaunchTemplate.Version,
-					LaunchTemplateData: &ec2.RequestLaunchTemplateData{
-						ImageId: inputData.LaunchTemplateVersionOpts.AmiID,
-					},
-				})
-				if err != nil {
-					s.log.Error("error while creating a launch template version: %s", err)
-					return
-				}
-				s.log.Verbosef("created a launch template version containing the given AMI ID: %s, launch template version: %d \n", *inputData.LaunchTemplateVersionOpts.AmiID, ltv.LaunchTemplateVersion.VersionNumber)
-				preferredLaunchTemplateVersion = ltv.LaunchTemplateVersion
-			}
-		}
-
 		var maxRecords int64 = 1
-		asg, err := svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+		asgOutput, err := svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
 			AutoScalingGroupNames: []*string{&inputData.ASGName},
 			MaxRecords:            &maxRecords,
 		})
@@ -166,9 +122,9 @@ func (s *Scaler) Register(ctx context.Context) error {
 			return
 		}
 
-		s.log.Debug("asg", asg)
+		s.log.Debug("asg", asgOutput)
 
-		if len(asg.AutoScalingGroups) == 0 {
+		if len(asgOutput.AutoScalingGroups) == 0 {
 			// autoscaling group is absent in EC2
 			// so create one if allow_create is set to true
 			// else error out and return
@@ -176,6 +132,52 @@ func (s *Scaler) Register(ctx context.Context) error {
 			if !s.AllowCreate {
 				s.log.Error("ASG not found. Please set `allow_create` to true if you would like to create it via waymond")
 				return
+			}
+
+			// ensure launch template and its versions are available for the autoscaling group to make use of
+			var preferredLaunchTemplateVersion *ec2.LaunchTemplateVersion
+			if inputData.LaunchTemplateVersionOpts.AmiID != nil {
+				if inputData.BaseLaunchTemplate == nil {
+					s.log.Error("'base_launch_template' is required input for the aws_ec2_asg scaler if 'launch_template_version_options' is mentioned \n")
+					return
+				}
+				s.log.Verbosef("querying for a launch template version with AMI ID: %s \n", *inputData.LaunchTemplateVersionOpts.AmiID)
+				imageId := "image-id"
+				ltvs, err := ec2svc.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
+					LaunchTemplateId:   inputData.BaseLaunchTemplate.LaunchTemplateId,
+					LaunchTemplateName: inputData.BaseLaunchTemplate.LaunchTemplateName,
+					Filters: []*ec2.Filter{
+						{
+							Name:   &imageId,
+							Values: []*string{inputData.LaunchTemplateVersionOpts.AmiID},
+						},
+					},
+				})
+				if err != nil {
+					s.log.Errorf("error querying for a launch template version containing AMI ID (%s): %s \n", *inputData.LaunchTemplateVersionOpts.AmiID, err)
+					return
+				}
+				if ltvs != nil && len(ltvs.LaunchTemplateVersions) > 0 {
+					ltv := ltvs.LaunchTemplateVersions[0]
+					s.log.Verbosef("found a launch template version containing the given AMI ID: %s, launch template version: %d \n", *inputData.LaunchTemplateVersionOpts.AmiID, *ltv.VersionNumber)
+					preferredLaunchTemplateVersion = ltv
+				} else {
+					s.log.Verbosef("unable to find a launch template version containing the given AMI ID: %s, so creating one. \n", *inputData.LaunchTemplateVersionOpts.AmiID)
+					ltv, err := ec2svc.CreateLaunchTemplateVersion(&ec2.CreateLaunchTemplateVersionInput{
+						LaunchTemplateName: inputData.BaseLaunchTemplate.LaunchTemplateName,
+						LaunchTemplateId:   inputData.BaseLaunchTemplate.LaunchTemplateId,
+						SourceVersion:      inputData.BaseLaunchTemplate.Version,
+						LaunchTemplateData: &ec2.RequestLaunchTemplateData{
+							ImageId: inputData.LaunchTemplateVersionOpts.AmiID,
+						},
+					})
+					if err != nil {
+						s.log.Error("error while creating a launch template version: %s", err)
+						return
+					}
+					s.log.Verbosef("created a launch template version containing the given AMI ID: %s, launch template version: %d \n", *inputData.LaunchTemplateVersionOpts.AmiID, ltv.LaunchTemplateVersion.VersionNumber)
+					preferredLaunchTemplateVersion = ltv.LaunchTemplateVersion
+				}
 			}
 
 			s.log.Verbose("creating a new ASG")
@@ -284,22 +286,46 @@ func (s *Scaler) Register(ctx context.Context) error {
 				return
 			}
 			s.log.Verbosef("created a new ASG: %s", createdASG)
-			return
 		}
 
-		// if len(asgOutput.AutoScalingGroups) != 1 {
-		// 	s.log.Error("unable to find the autoscaling group", inputData.ASGName)
-		// 	return
-		// }
+		if len(asgOutput.AutoScalingGroups) != 1 {
+			s.log.Error("unable to find the autoscaling group", inputData.ASGName)
+			return
+		}
+		asg := asgOutput.AutoScalingGroups[0]
 
-		// _, err = svc.UpdateAutoScalingGroup(&autoscaling.UpdateAutoScalingGroupInput{
-		// 	AutoScalingGroupName: &inputData.ASGName,
-		// 	DesiredCapacity:      &inputData.DesiredCount,
-		// })
-		// if err != nil {
-		// 	s.log.Error("error trying to update autoscaling group", err)
-		// 	return
-		// }
+		var updateAsg *autoscaling.UpdateAutoScalingGroupInput
+		if *asg.DesiredCapacity < inputData.DesiredCount {
+			// scale-out
+			if s.DisableScaleOut != nil && *s.DisableScaleOut {
+				return
+			}
+
+			updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
+				AutoScalingGroupName: &inputData.ASGName,
+				DesiredCapacity:      &inputData.DesiredCount,
+			}
+		} else if *asg.DesiredCapacity > inputData.DesiredCount {
+			// scale-in
+			if s.DisableScaleIn != nil && *s.DisableScaleIn {
+				return
+			}
+
+			updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
+				AutoScalingGroupName: &inputData.ASGName,
+				DesiredCapacity:      &inputData.DesiredCount,
+			}
+		}
+
+		if updateAsg != nil {
+			s.log.Verbosef("updating asg (%s) to match the desired count: from %d to %d\n", *asg.AutoScalingGroupName, *asg.DesiredCapacity, inputData.DesiredCount)
+			_, err = svc.UpdateAutoScalingGroup(updateAsg)
+			if err != nil {
+				s.log.Error("error trying to update autoscaling group", err)
+				return
+			}
+			s.log.Verbosef("updated asg (%s) to match the desired count: from %d to %d\n", *asg.AutoScalingGroupName, *asg.DesiredCapacity, inputData.DesiredCount)
+		}
 
 		s.log.Verbose("end")
 	})
