@@ -98,6 +98,8 @@ func (s *Scaler) Register(ctx context.Context) error {
 		var inputData struct {
 			ASGName                   string                       `json:"asg_name"`
 			DesiredCount              int64                        `json:"desired_count"`
+			MinSize                   *int64                       `json:"min_size"`
+			MaxSize                   *int64                       `json:"max_size"`
 			Tags                      []ASGTag                     `json:"tags"`
 			BaseLaunchTemplate        *LaunchTemplateSpecification `json:"base_launch_template"`
 			LaunchTemplateVersionOpts struct {
@@ -190,6 +192,13 @@ func (s *Scaler) Register(ctx context.Context) error {
 				CapacityRebalance: s.CapacityRebalance,
 				DefaultCooldown:   s.DefaultCooldown,
 				PlacementGroup:    s.PlacementGroup,
+			}
+
+			if inputData.MinSize != nil {
+				createAsgInput.MinSize = inputData.MinSize
+			}
+			if inputData.MaxSize != nil {
+				createAsgInput.MaxSize = inputData.MaxSize
 			}
 
 			if len(s.VpcZoneIdentifier) > 0 {
@@ -288,10 +297,15 @@ func (s *Scaler) Register(ctx context.Context) error {
 			s.log.Verbosef("created a new ASG: %s", createdASG)
 		}
 
-		if len(asgOutput.AutoScalingGroups) != 1 {
-			s.log.Error("unable to find the autoscaling group", inputData.ASGName)
+		asgOutput, err = svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: []*string{&inputData.ASGName},
+			MaxRecords:            &maxRecords,
+		})
+		if err != nil {
+			s.log.Error("error while trying to find autoscaling group", err)
 			return
 		}
+
 		asg := asgOutput.AutoScalingGroups[0]
 
 		var updateAsg *autoscaling.UpdateAutoScalingGroupInput
