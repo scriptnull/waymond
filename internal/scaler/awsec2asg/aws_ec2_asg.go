@@ -305,40 +305,41 @@ func (s *Scaler) Register(ctx context.Context) error {
 			s.log.Error("error while trying to find autoscaling group", err)
 			return
 		}
+		if asgOutput != nil && len(asgOutput.AutoScalingGroups) > 0 {
+			asg := asgOutput.AutoScalingGroups[0]
 
-		asg := asgOutput.AutoScalingGroups[0]
+			var updateAsg *autoscaling.UpdateAutoScalingGroupInput
+			if *asg.DesiredCapacity < inputData.DesiredCount {
+				// scale-out
+				if s.DisableScaleOut != nil && *s.DisableScaleOut {
+					return
+				}
 
-		var updateAsg *autoscaling.UpdateAutoScalingGroupInput
-		if *asg.DesiredCapacity < inputData.DesiredCount {
-			// scale-out
-			if s.DisableScaleOut != nil && *s.DisableScaleOut {
-				return
+				updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
+					AutoScalingGroupName: &inputData.ASGName,
+					DesiredCapacity:      &inputData.DesiredCount,
+				}
+			} else if *asg.DesiredCapacity > inputData.DesiredCount {
+				// scale-in
+				if s.DisableScaleIn != nil && *s.DisableScaleIn {
+					return
+				}
+
+				updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
+					AutoScalingGroupName: &inputData.ASGName,
+					DesiredCapacity:      &inputData.DesiredCount,
+				}
 			}
 
-			updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
-				AutoScalingGroupName: &inputData.ASGName,
-				DesiredCapacity:      &inputData.DesiredCount,
+			if updateAsg != nil {
+				s.log.Verbosef("updating asg (%s) to match the desired count: from %d to %d\n", *asg.AutoScalingGroupName, *asg.DesiredCapacity, inputData.DesiredCount)
+				_, err = svc.UpdateAutoScalingGroup(updateAsg)
+				if err != nil {
+					s.log.Error("error trying to update autoscaling group", err)
+					return
+				}
+				s.log.Verbosef("updated asg (%s) to match the desired count: from %d to %d\n", *asg.AutoScalingGroupName, *asg.DesiredCapacity, inputData.DesiredCount)
 			}
-		} else if *asg.DesiredCapacity > inputData.DesiredCount {
-			// scale-in
-			if s.DisableScaleIn != nil && *s.DisableScaleIn {
-				return
-			}
-
-			updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
-				AutoScalingGroupName: &inputData.ASGName,
-				DesiredCapacity:      &inputData.DesiredCount,
-			}
-		}
-
-		if updateAsg != nil {
-			s.log.Verbosef("updating asg (%s) to match the desired count: from %d to %d\n", *asg.AutoScalingGroupName, *asg.DesiredCapacity, inputData.DesiredCount)
-			_, err = svc.UpdateAutoScalingGroup(updateAsg)
-			if err != nil {
-				s.log.Error("error trying to update autoscaling group", err)
-				return
-			}
-			s.log.Verbosef("updated asg (%s) to match the desired count: from %d to %d\n", *asg.AutoScalingGroupName, *asg.DesiredCapacity, inputData.DesiredCount)
 		}
 
 		s.log.Verbose("end")
