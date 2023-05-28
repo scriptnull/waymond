@@ -15,8 +15,10 @@ import (
 	"github.com/scriptnull/waymond/internal/scaler"
 )
 
-const Type scaler.Type = "aws_ec2_asg"
-
+const (
+	Type scaler.Type = "aws_ec2_asg"
+	AWS_REGION = "us-east-1"
+)
 type Scaler struct {
 	ID           string `koanf:"id"`
 	namespacedID string
@@ -82,7 +84,9 @@ func (s *Scaler) Type() scaler.Type {
 }
 
 func (s *Scaler) Register(ctx context.Context) error {
-	sess, err := session.NewSession()
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(AWS_REGION),
+	})
 	if err != nil {
 		return err
 	}
