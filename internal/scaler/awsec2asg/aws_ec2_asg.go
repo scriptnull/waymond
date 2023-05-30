@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -17,13 +18,13 @@ import (
 
 const (
 	Type scaler.Type = "aws_ec2_asg"
-	AWS_REGION = "us-east-1"
 )
-type Scaler struct {
-	ID           string `koanf:"id"`
-	namespacedID string
-	log          log.Logger
 
+type Scaler struct {
+	ID                   string `koanf:"id"`
+	namespacedID         string
+	log                  log.Logger
+	Region               *string               `koanf:"region"`
 	AllowCreate          bool                  `koanf:"allow_create"`
 	DisableScaleIn       *bool                 `koanf:"disable_scale_in"`
 	DisableScaleOut      *bool                 `koanf:"disable_scale_out"`
@@ -84,8 +85,14 @@ func (s *Scaler) Type() scaler.Type {
 }
 
 func (s *Scaler) Register(ctx context.Context) error {
+
+	var AwsRegion *string
+
+	if s.Region != nil {
+		AwsRegion = s.Region
+	}
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(AWS_REGION),
+		Region: aws.String(*AwsRegion),
 	})
 	if err != nil {
 		return err
