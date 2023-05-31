@@ -85,15 +85,13 @@ func (s *Scaler) Type() scaler.Type {
 }
 
 func (s *Scaler) Register(ctx context.Context) error {
-
-	var AwsRegion *string
-
+	var sessConfigs []*aws.Config
 	if s.Region != nil {
-		AwsRegion = s.Region
+		sessConfigs = append(sessConfigs, &aws.Config{
+			Region: s.Region,
+		})
 	}
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(*AwsRegion),
-	})
+	sess, err := session.NewSession(sessConfigs...)
 	if err != nil {
 		return err
 	}
