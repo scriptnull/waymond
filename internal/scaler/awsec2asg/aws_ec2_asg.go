@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -15,13 +16,15 @@ import (
 	"github.com/scriptnull/waymond/internal/scaler"
 )
 
-const Type scaler.Type = "aws_ec2_asg"
+const (
+	Type scaler.Type = "aws_ec2_asg"
+)
 
 type Scaler struct {
-	ID           string `koanf:"id"`
-	namespacedID string
-	log          log.Logger
-
+	ID                   string `koanf:"id"`
+	namespacedID         string
+	log                  log.Logger
+	Region               *string               `koanf:"region"`
 	AllowCreate          bool                  `koanf:"allow_create"`
 	DisableScaleIn       *bool                 `koanf:"disable_scale_in"`
 	DisableScaleOut      *bool                 `koanf:"disable_scale_out"`
@@ -82,7 +85,13 @@ func (s *Scaler) Type() scaler.Type {
 }
 
 func (s *Scaler) Register(ctx context.Context) error {
-	sess, err := session.NewSession()
+	var sessConfigs []*aws.Config
+	if s.Region != nil {
+		sessConfigs = append(sessConfigs, &aws.Config{
+			Region: s.Region,
+		})
+	}
+	sess, err := session.NewSession(sessConfigs...)
 	if err != nil {
 		return err
 	}
