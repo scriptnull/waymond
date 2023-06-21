@@ -318,6 +318,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 			asg := asgOutput.AutoScalingGroups[0]
 
 			var updateAsg *autoscaling.UpdateAutoScalingGroupInput
+			requiredCount := *asg.DesiredCapacity + inputData.DesiredCount
 			if *asg.DesiredCapacity < inputData.DesiredCount {
 				// scale-out
 				if s.DisableScaleOut != nil && *s.DisableScaleOut {
@@ -336,7 +337,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 
 				updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
 					AutoScalingGroupName: &inputData.ASGName,
-					DesiredCapacity:      &inputData.DesiredCount,
+					DesiredCapacity:      &requiredCount,
 				}
 			}
 
