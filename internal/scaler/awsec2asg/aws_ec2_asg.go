@@ -319,7 +319,7 @@ func (s *Scaler) Register(ctx context.Context) error {
 
 			var updateAsg *autoscaling.UpdateAutoScalingGroupInput
 
-			desiredCapacity := inputData.DesiredCount
+			desiredCapacity := inputData.DesiredCount + *asg.DesiredCapacity
 
 			if *asg.DesiredCapacity < inputData.DesiredCount {
 				// scale-out
