@@ -10,11 +10,11 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/scriptnull/waymond)](https://goreportcard.com/report/github.com/scriptnull/waymond) [![lint](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml/badge.svg?branch=main)](https://github.com/scriptnull/waymond/actions/workflows/lint.yaml) ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/scriptnull/waymond) ![GitHub](https://img.shields.io/github/license/scriptnull/waymond)
 
 waymond is
+
 - An open-source autoscaler.
 - Aiming to provide autoscaling for a wide variety of infrastructure.
 - Modular and extensible.
 - Built with Go.
-
 
 ## Motivation
 
@@ -45,6 +45,7 @@ Connectors are the components which connect two objects to facilitate the flow o
 Connectors can connect a trigger to a trigger (and form a chain of triggers) that ultimately is connected to a scaler. Connectors are also a good place to do data transformation of data from a trigger to a format of data that a scaler can understand.
 
 ### Event Bus
+
 All the components `triggers`, `scalers`, and `connectors` are internally connected via a simple event bus (don't be scared it is just a Go channel and some helper functions :smile:). This event-based architecture will help any of the above mentioned components to capture and act on events in a seamless way.
 
 ## Install
@@ -59,6 +60,7 @@ mv waymond /usr/bin/waymond
 ```
 
 ## Command
+
 The only way to run waymond right now is
 
 ```sh
@@ -66,7 +68,6 @@ waymond -config waymond.toml
 ```
 
 But the project is looking to improve the CLI experience. So, please take a look [here](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%2Fcli) if you would like to contribute.
-
 
 ## Configuration
 
@@ -100,33 +101,33 @@ to = "scaler.local_redis_containers"
 
 ### Trigger
 
-| type | status | description |
-|------|--------|-------------|
-| cron | Available | Trigger events based on [cron expressions](https://en.wikipedia.org/wiki/Cron) |
-| http_endpoint | Looking for contribution | Starts a HTTP server in waymond and triggers event for every HTTP request |
-| http_client | Looking for contribution | Creates a HTTP client in waymond and triggers event based on the HTTP response |
-| buildkite | [In progress](https://github.com/scriptnull/waymond/milestone/1) | Trigger event based on the CI job queue length in Buildkite |
+| type          | status                   | description                                                                    |
+| ------------- | ------------------------ | ------------------------------------------------------------------------------ |
+| cron          | Available                | Trigger events based on [cron expressions](https://en.wikipedia.org/wiki/Cron) |
+| http_endpoint | Looking for contribution | Starts a HTTP server in waymond and triggers event for every HTTP request      |
+| http_client   | Looking for contribution | Creates a HTTP client in waymond and triggers event based on the HTTP response |
+| buildkite     | Available                | Trigger event based on the CI job queue length in Buildkite                    |
 
 Propose a new trigger [here](https://github.com/scriptnull/waymond/issues/new).
 
 ### Scaler
 
-| type | status | description |
-|------|--------|-------------|
-| docker | Available | Autoscales docker containers |
-| docker_compose | Looking for contribution | Autoscales containers in a docker compose setup |
-| aws_ec2 | Looking for contribution | Autoscales AWS EC2 machines |
-| aws_ec2_fleet | Looking for contribution | Autoscales AWS EC2 machines via [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html) |
-| aws_ec2_asg | [Planned](https://github.com/scriptnull/waymond/milestone/1) | Autoscales AWS EC2 machines via Autoscaling groups |
+| type           | status                   | description                                                                                                         |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| docker         | Available                | Autoscales docker containers                                                                                        |
+| docker_compose | Looking for contribution | Autoscales containers in a docker compose setup                                                                     |
+| noop           | Available                | `noop` stands for "No-Operation". This is mainly for debugging what data is being received by a problematic scaler. |
+| aws_ec2        | Looking for contribution | Autoscales AWS EC2 machines                                                                                         |
+| aws_ec2_fleet  | Looking for contribution | Autoscales AWS EC2 machines via [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html)     |
+| aws_ec2_asg    | Available                | Autoscales AWS EC2 machines via Autoscaling groups                                                                  |
 
 Propose a new scaler [here](https://github.com/scriptnull/waymond/issues/new).
 
 ### Connector
 
-| type | status | description |
-|------|--------|-------------|
+| type   | status    | description                                                    |
+| ------ | --------- | -------------------------------------------------------------- |
 | direct | Available | Directly pass events between Trigger-Scaler or Trigger-Trigger |
-| regex | [Planned](https://github.com/scriptnull/waymond/milestone/1) | Like `direct`, but uses regular expressions to transform data sent between the components |
 
 Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new).
 
@@ -146,4 +147,10 @@ Run `just build` and `./waymond` binary should be ready for use.
 
 ## Community
 
+#### Talk to a human
+
 The project is currently in very early stages and it would be awesome if you could join us! If you are looking to talk to a human about the waymond project, feel free join the [telegram group](https://t.me/+SUoglr-nx2JhMmEy). If you are interested in requesting new features or report bugs, please do so in [the issue tracker](https://github.com/scriptnull/waymond/issues). If you are looking to contribute for the first time, try checking the [issues tagged with good-first-issue](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+
+#### Swag
+
+All contributors to the waymond project can optionally choose to receive an one-time swag. If you have contributed to the project, please fill out [this form](https://forms.gle/cigHWuw6ypZSLnxPA) to opt-in for receiving the swag.
