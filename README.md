@@ -34,15 +34,41 @@ waymond tries to support a variety of autoscaling targets from operating system 
 
 Triggers are the components which could trigger an event, which could ultimately yield to autoscaling. The decision of when and how to auto-scale will flow from here.
 
+| type          | status                   | description                                                                    |
+| ------------- | ------------------------ | ------------------------------------------------------------------------------ |
+| cron          | Available                | Trigger events based on [cron expressions](https://en.wikipedia.org/wiki/Cron) |
+| http_endpoint | Looking for contribution | Starts a HTTP server in waymond and triggers event for every HTTP request      |
+| http_client   | Looking for contribution | Creates a HTTP client in waymond and triggers event based on the HTTP response |
+| buildkite     | Available                | Trigger event based on the CI job queue length in Buildkite                    |
+
+Propose a new trigger [here](https://github.com/scriptnull/waymond/issues/new).
+
 ### Scalers
 
 Scalers are the components which perform autoscaling operation. They access the target APIs (like docker or AWS API) to achieve a desired state in those systems.
+
+| type           | status                   | description                                                                                                         |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| docker         | Available                | Autoscales docker containers                                                                                        |
+| docker_compose | Looking for contribution | Autoscales containers in a docker compose setup                                                                     |
+| noop           | Available                | `noop` stands for "No-Operation". This is mainly for debugging what data is being received by a problematic scaler. |
+| aws_ec2        | Looking for contribution | Autoscales AWS EC2 machines                                                                                         |
+| aws_ec2_fleet  | Looking for contribution | Autoscales AWS EC2 machines via [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html)     |
+| aws_ec2_asg    | Available                | Autoscales AWS EC2 machines via Autoscaling groups                                                                  |
+
+Propose a new scaler [here](https://github.com/scriptnull/waymond/issues/new).
 
 ### Connectors
 
 Connectors are the components which connect two objects to facilitate the flow of events between them. Example: A connector could connect a cron trigger to docker scaler. This will ensure that the desired number of docker containers are running in a machine periodically.
 
 Connectors can connect a trigger to a trigger (and form a chain of triggers) that ultimately is connected to a scaler. Connectors are also a good place to do data transformation of data from a trigger to a format of data that a scaler can understand.
+
+| type   | status    | description                                                    |
+| ------ | --------- | -------------------------------------------------------------- |
+| direct | Available | Directly pass events between Trigger-Scaler or Trigger-Trigger |
+
+Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new).
 
 ### Event Bus
 
@@ -96,40 +122,6 @@ id = "run_redis_via_cron"
 from = "trigger.global_cron"
 to = "scaler.local_redis_containers"
 ```
-
-## Modules
-
-### Trigger
-
-| type          | status                   | description                                                                    |
-| ------------- | ------------------------ | ------------------------------------------------------------------------------ |
-| cron          | Available                | Trigger events based on [cron expressions](https://en.wikipedia.org/wiki/Cron) |
-| http_endpoint | Looking for contribution | Starts a HTTP server in waymond and triggers event for every HTTP request      |
-| http_client   | Looking for contribution | Creates a HTTP client in waymond and triggers event based on the HTTP response |
-| buildkite     | Available                | Trigger event based on the CI job queue length in Buildkite                    |
-
-Propose a new trigger [here](https://github.com/scriptnull/waymond/issues/new).
-
-### Scaler
-
-| type           | status                   | description                                                                                                         |
-| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| docker         | Available                | Autoscales docker containers                                                                                        |
-| docker_compose | Looking for contribution | Autoscales containers in a docker compose setup                                                                     |
-| noop           | Available                | `noop` stands for "No-Operation". This is mainly for debugging what data is being received by a problematic scaler. |
-| aws_ec2        | Looking for contribution | Autoscales AWS EC2 machines                                                                                         |
-| aws_ec2_fleet  | Looking for contribution | Autoscales AWS EC2 machines via [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html)     |
-| aws_ec2_asg    | Available                | Autoscales AWS EC2 machines via Autoscaling groups                                                                  |
-
-Propose a new scaler [here](https://github.com/scriptnull/waymond/issues/new).
-
-### Connector
-
-| type   | status    | description                                                    |
-| ------ | --------- | -------------------------------------------------------------- |
-| direct | Available | Directly pass events between Trigger-Scaler or Trigger-Trigger |
-
-Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new).
 
 ## Contribute
 
