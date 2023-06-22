@@ -70,10 +70,6 @@ Connectors can connect a trigger to a trigger (and form a chain of triggers) tha
 
 Propose a new connector [here](https://github.com/scriptnull/waymond/issues/new).
 
-### Event Bus
-
-All the components `triggers`, `scalers`, and `connectors` are internally connected via a simple event bus (don't be scared it is just a Go channel and some helper functions :smile:). This event-based architecture will help any of the above mentioned components to capture and act on events in a seamless way.
-
 ## Install
 
 Download the binary for your OS and architecture from the [latest release](https://github.com/scriptnull/waymond/releases). Extract the compressed package and move it an executable PATH.
