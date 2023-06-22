@@ -318,15 +318,22 @@ func (s *Scaler) Register(ctx context.Context) error {
 			asg := asgOutput.AutoScalingGroups[0]
 
 			var updateAsg *autoscaling.UpdateAutoScalingGroupInput
+
+			desiredCapacity := inputData.DesiredCount
+
 			if *asg.DesiredCapacity < inputData.DesiredCount {
 				// scale-out
 				if s.DisableScaleOut != nil && *s.DisableScaleOut {
 					return
 				}
 
+				if desiredCapacity > *asg.MaxSize {
+					desiredCapacity = *asg.MaxSize
+				}
+
 				updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
 					AutoScalingGroupName: &inputData.ASGName,
-					DesiredCapacity:      &inputData.DesiredCount,
+					DesiredCapacity:      &desiredCapacity,
 				}
 			} else if *asg.DesiredCapacity > inputData.DesiredCount {
 				// scale-in
@@ -334,9 +341,13 @@ func (s *Scaler) Register(ctx context.Context) error {
 					return
 				}
 
+				if desiredCapacity < *asg.MinSize {
+					desiredCapacity = *asg.MinSize
+				}
+
 				updateAsg = &autoscaling.UpdateAutoScalingGroupInput{
 					AutoScalingGroupName: &inputData.ASGName,
-					DesiredCapacity:      &inputData.DesiredCount,
+					DesiredCapacity:      &desiredCapacity,
 				}
 			}
 
