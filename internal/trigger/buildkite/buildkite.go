@@ -83,6 +83,8 @@ func (t *Trigger) Do(_ []byte) error {
 				// example: job B depends on job C and job C is not present in the build.
 				// Hence, it is better to neglect it during auto-scaling.
 				Waiting int
+				Running int
+				Total   int
 			}
 		} `json:"jobs"`
 	}
@@ -94,6 +96,9 @@ func (t *Trigger) Do(_ []byte) error {
 	type outputData struct {
 		Queue              string `json:"queue"`
 		ScheduledJobsCount int    `json:"scheduled_jobs_count"`
+		RunningJobsCount   int    `json:"running_jobs_count"`
+		WaitingJobsCount   int    `json:"waiting_jobs_count"`
+		TotalJobsCount     int    `json:"total_jobs_count"`
 	}
 
 	queues := metrics.Jobs.Queues
@@ -107,10 +112,15 @@ func (t *Trigger) Do(_ []byte) error {
 	}
 
 	for qName, q := range queues {
-		t.log.Debugf("qName: %s, waitingSize: %d \n", qName, q.Scheduled)
+		t.log.Debugf(
+			"qName: %s, scheduledSize: %d, waitingSize: %d, runningSize: %d, totalSize: %d \n",
+			qName, q.Scheduled, q.Waiting, q.Running, q.Total)
 		data := outputData{
 			Queue:              qName,
 			ScheduledJobsCount: q.Scheduled,
+			WaitingJobsCount:   q.Waiting,
+			RunningJobsCount:   q.Running,
+			TotalJobsCount:     q.Total,
 		}
 		rawData, err := json.Marshal(data)
 		if err != nil {
