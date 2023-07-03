@@ -95,6 +95,8 @@ func (t *Trigger) Do(_ []byte) error {
 		Queue              string `json:"queue"`
 		ScheduledJobsCount int    `json:"scheduled_jobs_count"`
 		RunningJobsCount   int    `json:"running_jobs_count"`
+		WaitingJobsCount   int    `json:"waiting_jobs_count"`
+		TotalJobsCount     int    `json:"total_jobs_count"`
 	}
 
 	queues := metrics.Jobs.Queues

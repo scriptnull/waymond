@@ -58,7 +58,7 @@ method = "go_template"
 template = """
 {
   "asg_name": "{{ .queue }}",
-  "desired_count": {{ .scheduled_jobs_count }},
+  "desired_count": {{ .scheduled_jobs_count + .running_jobs_count }},
   "tags": [
     {
       "key": "buildkite-agent-tag:queue",
