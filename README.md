@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/4211715/233856711-5d876307-24fd-41e8-858a-9948b8fc880d.svg" height="256px">
+  <img src="https://user-images.githubusercontent.com/4211715/222973222-134cc720-3d44-484f-b39c-e2aaeb070bda.svg" height="128px" style="max-width: 100%;">
   <br><br>
   <b>waymond</b> - <i>Autoscale Anything Anywhere All at once! :eyes:</i>
   <br>
