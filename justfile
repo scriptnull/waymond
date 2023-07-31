@@ -4,8 +4,11 @@ lint:
 build: lint
   go build -o waymond cmd/waymond/main.go
 
-deploy:
+site-install:
+  pushd site && npm install && popd
+
+deploy: site-install
   pushd site && USE_SSH=true npm run deploy && popd
 
-run-site:
+run-site: site-install
   pushd site && npm run start && popd
