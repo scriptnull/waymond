@@ -146,6 +146,14 @@ If you are a user of [nix](https://nixos.org/) package manager, you can enter th
 
 Run `just build` and `./waymond` binary should be ready for use.
 
+## Progress
+waymond is still an ⚠️ alpha software ⚠️ at this point.
+
+- July 2022: waymond deployment continues to run. Two new contributors for the project so far. [v0.2.2](https://github.com/scriptnull/waymond/releases/tag/v0.2.2) was released for fixing bugs. 🐛
+- June 2022: waymond was deployed in a real-world use-case to autoscale hundreds of machines. [v0.2.1](https://github.com/scriptnull/waymond/releases/tag/v0.2.1) was released. 💯
+- May 2022: waymond [v0.2.0](https://github.com/scriptnull/waymond/releases/tag/v0.2.0) with minimal features needed to run it in real-world workloads 👷‍♂️
+- March 2022: waymond won a prize in [FOSS Hack 3.0](https://forum.fossunited.org/t/foss-hack-3-0-results/1882) 🏆🏅
+
 ## Community
 
 #### Talk to a human
