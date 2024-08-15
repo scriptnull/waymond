@@ -25,7 +25,7 @@ After downloading the binary to `/usr/bin` directory, create a new service unit 
 
 ```
 [Unit]
-Description=An Autoscaler Service
+Description=An Awesome Autoscaler Service
 After=network.target
 
 [Service]
