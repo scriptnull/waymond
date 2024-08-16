@@ -50,4 +50,3 @@ Start the service:
 
 ```sudo systemctl start waymond.service```
 
-But the project is looking to improve the CLI experience. So, please take a look [here](https://github.com/scriptnull/waymond/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%2Fcli) if you would like to contribute.
