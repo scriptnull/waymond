@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -160,6 +161,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if is_DAG := verifyDAG(connectors); !is_DAG {
+		corelog.Error(errors.New("invalid config. Config must be Directed Acyclic Graph(DAG)"))
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
 
 	err := event.Init()
@@ -225,4 +231,41 @@ func main() {
 	corelog.Verbose("press CTRL+C if you would like to quit")
 	<-done
 	corelog.Verbose("stopped waymond")
+}
+
+func verifyDAG(connectors map[string]connector.Interface) bool {
+	// Map to keep track of visited nodes
+	visited := make(map[string]bool)
+	// Map to track nodes currently in the recursion stack, indicating potential cycles
+	stack := make(map[string]bool)
+
+	// Iterate through all connectors
+	for _, connector := range connectors {
+		if !visited[connector.From()] {
+			if isCyclic(connector.From(), connectors, visited, stack) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isCyclic(node string, connectors map[string]connector.Interface, visited, stack map[string]bool) bool {
+	visited[node] = true
+	stack[node] = true
+
+	// Iterate over all outgoing edges from the current node
+	for _, connector := range connectors {
+		if connector.From() == node {
+			if !visited[connector.To()] && isCyclic(connector.To(), connectors, visited, stack) {
+				return true
+				// If the node is already in the recursion stack, a cycle is detected
+			} else if stack[connector.To()] {
+				return true
+			}
+		}
+	}
+
+	stack[node] = false
+	return false
 }
