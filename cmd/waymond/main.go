@@ -234,15 +234,16 @@ func main() {
 }
 
 func verifyDAG(connectors map[string]connector.Interface) bool {
-	// Map to keep track of visited nodes
+	// map to keep track of visited nodes(all whose neighbours have been visited)
 	visited := make(map[string]bool)
-	// Map to track nodes currently in the recursion stack, indicating potential cycles
-	stack := make(map[string]bool)
+	// map to track nodes that are currently in the recursion stack
+	visiting := make(map[string]bool)
 
-	// Iterate through all connectors
+	// iterate through all connectors(edges of a directed graph)
 	for _, connector := range connectors {
+		// only process if the node is not fully visited
 		if !visited[connector.From()] {
-			if isCyclic(connector.From(), connectors, visited, stack) {
+			if isCyclic(connector.From(), connectors, visited, visiting) {
 				return false
 			}
 		}
@@ -250,22 +251,33 @@ func verifyDAG(connectors map[string]connector.Interface) bool {
 	return true
 }
 
-func isCyclic(node string, connectors map[string]connector.Interface, visited, stack map[string]bool) bool {
-	visited[node] = true
-	stack[node] = true
+func isCyclic(node string, connectors map[string]connector.Interface, visited, visiting map[string]bool) bool {
 
-	// Iterate over all outgoing edges from the current node
+	// if the current node is already in the visiting state, a cycle is detected
+	if visiting[node] {
+		return true
+	}
+
+	// avoiding processing the node again if it is already fully visited
+	if visited[node] {
+		return false
+	}
+
+	// marking the node that it is in the current recursion stack
+	visiting[node] = true
+
+	// iterate over all neighbours of the node in a directed graph
 	for _, connector := range connectors {
 		if connector.From() == node {
-			if !visited[connector.To()] && isCyclic(connector.To(), connectors, visited, stack) {
-				return true
-				// If the node is already in the recursion stack, a cycle is detected
-			} else if stack[connector.To()] {
+			if isCyclic(connector.To(), connectors, visited, visiting) {
 				return true
 			}
 		}
 	}
 
-	stack[node] = false
+	// marking the node that all its neighbours have been visited and removing it from the recursion stack
+	visiting[node] = false
+	visited[node] = true
+
 	return false
 }
