@@ -115,11 +115,7 @@ to = "trigger.buildkite"
 type = "direct"
 id = "connect_buildkite_to_itself"
 from = "trigger.buildkite"
-to = "trigger.buildkite"
-
-[[scaler]]
-type = "noop"
-id = "noop"`
+to = "trigger.buildkite"`
 
 const testcase4 = `
 [[trigger]]
@@ -165,46 +161,47 @@ id = "noop"
 type = "direct"
 id = "connect_buildkite_2_to_noop"
 from = "trigger.buildkite_2"
-to = "trigger.noop"`
+to = "scaler.noop"`
 
 func TestVerifyDAG(t *testing.T) {
-	tt := []struct {
-		conf         string
-		isDAG        bool
-		expectsError bool
+	tests := []struct {
+		name  string
+		conf  string
+		isDAG bool
 	}{
 		{
+			name:  "cron-buildkite-noop",
 			conf:  testcase1,
 			isDAG: true,
 		},
 		{
+			name:  "cron-buildkite1-noop, buildkite1-buildkite2, buildkite2-noop",
 			conf:  testcase2,
 			isDAG: true,
 		},
 		{
+			name:  "cron-buildkite1-buildkite1",
 			conf:  testcase3,
 			isDAG: false,
 		},
 		{
+			name:  "cron-buildkite1, buildkite1-buildkite2, buildkite2-noop, buildkite2-buildkite1",
 			conf:  testcase4,
 			isDAG: false,
 		},
 	}
 
-	for i, tc := range tt {
-		connectors, err := extractConnectors(tc.conf)
-		if err != nil {
-			t.Error("Exracting connectors returned errors")
-		}
-
-		if tc.isDAG != verifyDAG(connectors) {
-			isDag := "false"
-			if tc.isDAG {
-				isDag = "true"
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			connectors, err := extractConnectors(tt.conf)
+			if err != nil {
+				t.Error("Exracting connectors returned errors")
 			}
-			resultString := fmt.Sprintf("testcase%d: isDAG: %s but returned otherwise", i, isDag)
-			t.Errorf("Failed to correctly verify DAG: %s", resultString)
-		}
+			got := verifyDAG(connectors)
+			if got != tt.isDAG {
+				t.Errorf("verifyDAG() = %v, want %v", got, tt.isDAG)
+			}
+		})
 	}
 }
 
