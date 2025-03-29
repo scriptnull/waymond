@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -160,6 +161,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if is_DAG := verifyDAG(connectors); !is_DAG {
+		corelog.Error(errors.New("invalid config. Config must be Directed Acyclic Graph(DAG)"))
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
 
 	err := event.Init()
@@ -225,4 +231,53 @@ func main() {
 	corelog.Verbose("press CTRL+C if you would like to quit")
 	<-done
 	corelog.Verbose("stopped waymond")
+}
+
+func verifyDAG(connectors map[string]connector.Interface) bool {
+	// map to keep track of visited nodes(all whose neighbours have been visited)
+	visited := make(map[string]bool)
+	// map to track nodes that are currently in the recursion stack
+	visiting := make(map[string]bool)
+
+	// iterate through all connectors(edges of a directed graph)
+	for _, connector := range connectors {
+		// only process if the node is not fully visited
+		if !visited[connector.From()] {
+			if isCyclic(connector.From(), connectors, visited, visiting) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isCyclic(node string, connectors map[string]connector.Interface, visited, visiting map[string]bool) bool {
+
+	// if the current node is already in the visiting state, a cycle is detected
+	if visiting[node] {
+		return true
+	}
+
+	// avoiding processing the node again if it is already fully visited
+	if visited[node] {
+		return false
+	}
+
+	// marking the node that it is in the current recursion stack
+	visiting[node] = true
+
+	// iterate over all neighbours of the node in a directed graph
+	for _, connector := range connectors {
+		if connector.From() == node {
+			if isCyclic(connector.To(), connectors, visited, visiting) {
+				return true
+			}
+		}
+	}
+
+	// marking the node that all its neighbours have been visited and removing it from the recursion stack
+	visiting[node] = false
+	visited[node] = true
+
+	return false
 }

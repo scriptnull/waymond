@@ -73,3 +73,11 @@ func ParseConfig(k *koanf.Koanf) (connector.Interface, error) {
 
 	return c, nil
 }
+
+func (c *Connector) To() string {
+	return c.to
+}
+
+func (c *Connector) From() string {
+	return c.from
+}

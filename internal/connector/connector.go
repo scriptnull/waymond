@@ -11,4 +11,7 @@ type Interface interface {
 	// It is executed exactly once for a given connection
 	// i.e. when waymond boots up
 	Register(ctx context.Context) error
+
+	From() string
+	To() string
 }
